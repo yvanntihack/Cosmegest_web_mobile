@@ -1,0 +1,15 @@
+# On ignore les dossiers lourds de dépendances
+web/node_modules
+mobile/node_modules
+
+# On ignore les dossiers de compilation
+web/dist
+mobile/dist
+
+# ON IGNORE LES FICHIERS ENV (SÉCURITÉ : tes clés Supabase ne doivent pas aller sur GitHub)
+web/.env
+mobile/.env
+
+# Fichiers système inutiles
+.DS_Store
+Thumbs.db
