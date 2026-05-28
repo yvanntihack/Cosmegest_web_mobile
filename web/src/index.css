@@ -1192,6 +1192,49 @@ button {
   margin-top: 18px;
 }
 
+.quote-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(180px, 0.9fr) repeat(2, minmax(140px, 0.7fr)) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fbfdff;
+}
+
+.quote-search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  background: #ffffff;
+}
+
+.quote-search-input:focus-within {
+  border-color: #0e7490;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.14);
+}
+
+.quote-search-input input {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+
+.quote-archive-message {
+  padding: 12px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #166534;
+  background: #f0fdf4;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .quote-preview-body {
   display: grid;
   gap: 16px;
@@ -1331,6 +1374,7 @@ button {
   .invoice-line,
   .quote-form-grid,
   .quote-form-grid.compact,
+  .quote-filters,
   .quote-line,
   .quote-preview-info {
     grid-template-columns: 1fr;
@@ -1352,6 +1396,7 @@ button {
   .invoice-summary .success-button,
   .dashboard-filters select,
   .dashboard-filters input,
+  .quote-filters button,
   .quote-actions button {
     width: 100%;
   }

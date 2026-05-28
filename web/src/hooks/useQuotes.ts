@@ -9,6 +9,7 @@ export interface QuoteLine {
 }
 
 export interface QuoteData {
+  id?: string;
   number: string;
   clientName: string;
   quoteDate: string;
@@ -58,14 +59,17 @@ const linesByType = (lines: any[] | null | undefined, type: QuoteLineType) =>
 
 const lineTotal = (line: QuoteLine) => line.quantity * line.unitPrice;
 
+const hasMeaningfulLineValue = (line: QuoteLine) =>
+  line.label.trim().length > 0 || line.unitPrice > 0 || lineTotal(line) > 0;
+
 const buildLineRows = (quote: CreateQuoteInput, quoteId: string) =>
   lineGroups.flatMap(({ type, key }) =>
     (quote[key] as QuoteLine[])
-      .filter((line) => line.label || line.quantity || line.unitPrice)
+      .filter(hasMeaningfulLineValue)
       .map((line) => ({
         quote_id: quoteId,
         line_type: type as QuoteLineRowType,
-        label: line.label,
+        label: line.label.trim(),
         quantity: line.quantity,
         unit_price: line.unitPrice,
         total_price: lineTotal(line),
@@ -84,6 +88,7 @@ export const useQuotes = () => {
       if (error) throw error;
 
       return (data ?? []).map((quote: any): QuoteData => ({
+        id: quote.id,
         number: quote.quote_number,
         clientName: quote.customers?.name ?? "",
         quoteDate: quote.quote_date,
@@ -162,6 +167,21 @@ export const useCreateQuote = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
+    },
+  });
+};
+
+export const useDeleteQuote = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("quotes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
     },
   });
 };

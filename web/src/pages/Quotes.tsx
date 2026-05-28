@@ -1,9 +1,9 @@
-import { Eye, FileText, Plus, Printer, Trash2 } from "lucide-react";
+import { Eye, FileText, Plus, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { FormEvent } from "react";
 import { useCustomers } from "../hooks/useCustomers";
-import { useCreateQuote, useQuotes } from "../hooks/useQuotes";
+import { useCreateQuote, useDeleteQuote, useQuotes } from "../hooks/useQuotes";
 import type { QuoteData, QuoteLine } from "../hooks/useQuotes";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -32,6 +32,7 @@ export default function Quotes() {
   const { data: customers } = useCustomers();
   const { data: savedQuotes = [], isLoading: quotesLoading } = useQuotes();
   const createQuote = useCreateQuote();
+  const deleteQuote = useDeleteQuote();
 
   const [quoteCreated, setQuoteCreated] = useState(false);
   const [quoteNo, setQuoteNo] = useState("Automatique");
@@ -53,6 +54,11 @@ export default function Quotes() {
   const [discount, setDiscount] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [formMessage, setFormMessage] = useState("");
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [quoteCustomerFilter, setQuoteCustomerFilter] = useState("");
+  const [quoteDateFrom, setQuoteDateFrom] = useState("");
+  const [quoteDateTo, setQuoteDateTo] = useState("");
+  const [archiveMessage, setArchiveMessage] = useState("");
   const previewRef = useRef<HTMLElement | null>(null);
 
   const selectedCustomer = customers?.find((customer) => customer.id === customerId);
@@ -69,6 +75,68 @@ export default function Quotes() {
   );
 
   const total = Math.max(subtotal - discount, 0);
+
+  const quoteCustomerOptions = useMemo(
+    () =>
+      Array.from(new Set(savedQuotes.map((quote) => quote.clientName).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, "fr"),
+      ),
+    [savedQuotes],
+  );
+
+  const filteredQuotes = useMemo(() => {
+    const normalizedSearch = quoteSearch.trim().toLowerCase();
+
+    return savedQuotes.filter((quote) => {
+      const quoteDateValue = quote.quoteDate || "";
+      const searchableText = [
+        quote.number,
+        quote.clientName,
+        quote.buyer,
+        quote.structureName,
+        quote.rangeName,
+        quote.productName,
+        quote.dominantColors,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      if (normalizedSearch && !searchableText.includes(normalizedSearch)) return false;
+      if (quoteCustomerFilter && quote.clientName !== quoteCustomerFilter) return false;
+      if (quoteDateFrom && quoteDateValue < quoteDateFrom) return false;
+      if (quoteDateTo && quoteDateValue > quoteDateTo) return false;
+
+      return true;
+    });
+  }, [quoteCustomerFilter, quoteDateFrom, quoteDateTo, quoteSearch, savedQuotes]);
+
+  const hasQuoteFilters = Boolean(quoteSearch || quoteCustomerFilter || quoteDateFrom || quoteDateTo);
+
+  const resetQuoteFilters = () => {
+    setQuoteSearch("");
+    setQuoteCustomerFilter("");
+    setQuoteDateFrom("");
+    setQuoteDateTo("");
+  };
+
+  const handleDeleteQuote = (quote: QuoteData) => {
+    if (!quote.id) {
+      setArchiveMessage("Impossible de supprimer ce devis: identifiant introuvable.");
+      return;
+    }
+
+    const confirmed = window.confirm(`Supprimer le devis ${quote.number} ?`);
+    if (!confirmed) return;
+
+    deleteQuote.mutate(quote.id, {
+      onSuccess: () => {
+        setArchiveMessage(`Devis ${quote.number} supprime avec succes.`);
+      },
+      onError: (error) => {
+        setArchiveMessage(error instanceof Error ? error.message : "Impossible de supprimer le devis.");
+      },
+    });
+  };
 
   const updateLine = (
     setter: Dispatch<SetStateAction<QuoteLine[]>>,
@@ -110,6 +178,7 @@ export default function Quotes() {
 
   const handleCreateQuote = (event: FormEvent) => {
     event.preventDefault();
+    setQuoteCreated(false);
 
     if (!customerId) {
       setFormMessage("Selectionnez un client avant de creer le devis.");
@@ -125,9 +194,12 @@ export default function Quotes() {
       { ...currentQuote, number: undefined, customerId },
       {
         onSuccess: (createdQuote: any) => {
+          const createdNumber = createdQuote.quote_number ?? quoteNo;
+
+          setQuoteNo(createdNumber);
           setQuoteCreated(true);
           setShowPreview(true);
-          setFormMessage(`Devis ${createdQuote.quote_number ?? quoteNo} cree avec succes dans la base de donnees.`);
+          setFormMessage(`Devis ${createdNumber} cree avec succes dans la base de donnees.`);
 
           window.setTimeout(() => {
             previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -507,8 +579,8 @@ export default function Quotes() {
           <button type="button" className="secondary-button" onClick={() => setShowPreview(true)}>
             <Eye size={18} /> Apercu devis
           </button>
-          <button type="submit" className="success-button">
-            <FileText size={18} /> Creer devis
+          <button type="submit" className="success-button" disabled={createQuote.isPending}>
+            <FileText size={18} /> {createQuote.isPending ? "Creation..." : "Creer devis"}
           </button>
           <button type="button" className="primary-button" onClick={() => printQuote(currentQuote)} disabled={total <= 0}>
             <Printer size={18} /> Imprimer
@@ -575,11 +647,52 @@ export default function Quotes() {
       <section className="quote-preview data-card">
         <div className="table-toolbar">
           <div>
-            <p className="panel-title">Devis crees</p>
-            <p>{quotesLoading ? "Chargement..." : `${savedQuotes.length} devis enregistre(s) en base`}</p>
+            <p className="panel-title">Archives devis</p>
+            <p>
+              {quotesLoading
+                ? "Chargement..."
+                : `${filteredQuotes.length} devis affiche(s) sur ${savedQuotes.length} enregistre(s)`}
+            </p>
           </div>
           <span className="badge">Archives</span>
         </div>
+        <div className="quote-filters">
+          <div className="field quote-search-field">
+            <label>Recherche</label>
+            <div className="quote-search-input">
+              <Search size={16} />
+              <input
+                type="search"
+                value={quoteSearch}
+                onChange={(event) => setQuoteSearch(event.target.value)}
+                placeholder="Numero, client, produit..."
+              />
+            </div>
+          </div>
+          <div className="field">
+            <label>Client</label>
+            <select value={quoteCustomerFilter} onChange={(event) => setQuoteCustomerFilter(event.target.value)}>
+              <option value="">Tous les clients</option>
+              {quoteCustomerOptions.map((clientName) => (
+                <option key={clientName} value={clientName}>
+                  {clientName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label>Date debut</label>
+            <input type="date" value={quoteDateFrom} onChange={(event) => setQuoteDateFrom(event.target.value)} />
+          </div>
+          <div className="field">
+            <label>Date fin</label>
+            <input type="date" value={quoteDateTo} onChange={(event) => setQuoteDateTo(event.target.value)} />
+          </div>
+          <button type="button" className="secondary-button" onClick={resetQuoteFilters} disabled={!hasQuoteFilters}>
+            <RotateCcw size={16} /> Reinitialiser
+          </button>
+        </div>
+        {archiveMessage && <div className="quote-archive-message">{archiveMessage}</div>}
         <div className="table-wrap">
           <table className="data-table">
             <thead>
@@ -593,7 +706,7 @@ export default function Quotes() {
               </tr>
             </thead>
             <tbody>
-              {savedQuotes.map((quote) => (
+              {filteredQuotes.map((quote) => (
                 <tr key={quote.number}>
                   <td className="strong-cell">{quote.number}</td>
                   <td>{quote.clientName || "N/A"}</td>
@@ -601,14 +714,25 @@ export default function Quotes() {
                   <td>{quote.dueDate ? new Date(quote.dueDate).toLocaleDateString("fr-FR") : "N/A"}</td>
                   <td className="strong-cell">{formatCurrency(quote.total)}</td>
                   <td>
-                    <button
-                      type="button"
-                      className="secondary-icon-button"
-                      onClick={() => printQuote(quote)}
-                      aria-label="Imprimer le devis"
-                    >
-                      <Printer size={16} />
-                    </button>
+                    <div className="row-actions">
+                      <button
+                        type="button"
+                        className="secondary-icon-button"
+                        onClick={() => printQuote(quote)}
+                        aria-label="Imprimer le devis"
+                      >
+                        <Printer size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="danger-button"
+                        onClick={() => handleDeleteQuote(quote)}
+                        aria-label="Supprimer le devis"
+                        disabled={deleteQuote.isPending}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -616,6 +740,9 @@ export default function Quotes() {
           </table>
         </div>
         {!quotesLoading && !savedQuotes.length && <div className="empty-state">Aucun devis cree pour le moment.</div>}
+        {!quotesLoading && Boolean(savedQuotes.length) && !filteredQuotes.length && (
+          <div className="empty-state">Aucun devis ne correspond aux filtres.</div>
+        )}
       </section>
     </div>
   );
