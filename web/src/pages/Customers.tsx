@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useCustomers, useCreateCustomer, useDeleteCustomer, useUpdateCustomer } from "../hooks/useCustomers";
 import type { Customer } from "../hooks/useCustomers";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import FilterBar from "../components/FilterBar";
 
 export default function Customers() {
   const { data: customers, isLoading } = useCustomers();
@@ -67,11 +68,23 @@ export default function Customers() {
     deleteCustomer.mutate(customer.id);
   };
 
+  const [search, setSearch] = useState("");
+
   if (isLoading) return <div className="loading-state">Chargement...</div>;
+
+  const filteredCustomers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return customers ?? [];
+    return (customers ?? []).filter((c) => {
+      const hay = [c.name, c.code, c.phone].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [customers, search]);
+
   const todayKey = new Date().toISOString().slice(0, 10);
   type CustomerWithMeta = Customer & { created_at?: string | null };
-  const todaysClients = (customers ?? []).filter((c: CustomerWithMeta) => String(c.created_at ?? "").slice(0, 10) === todayKey);
-  const otherClients = (customers ?? []).filter((c: CustomerWithMeta) => String(c.created_at ?? "").slice(0, 10) !== todayKey);
+  const todaysClients = filteredCustomers.filter((c: CustomerWithMeta) => String(c.created_at ?? "").slice(0, 10) === todayKey);
+  const otherClients = filteredCustomers.filter((c: CustomerWithMeta) => String(c.created_at ?? "").slice(0, 10) !== todayKey);
 
   return (
     <div className="page">
@@ -130,6 +143,10 @@ export default function Customers() {
       )}
 
       <div className="data-card">
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+          <FilterBar value={search} onChange={setSearch} placeholder="Rechercher clients, code ou telephone" />
+          <div style={{width: 12}} />
+        </div>
         <div className="table-toolbar">
           <div>
             <p className="panel-title">Clients du jour</p>

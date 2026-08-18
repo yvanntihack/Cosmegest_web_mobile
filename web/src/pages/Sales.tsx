@@ -1,5 +1,6 @@
 import { FileText, Pencil, Plus, ReceiptText, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import FilterBar from "../components/FilterBar";
 import type { FormEvent } from "react";
 import { useCustomers } from "../hooks/useCustomers";
 import { useCreateInvoice, useInvoices, useUpdateInvoice } from "../hooks/useInvoices";
@@ -47,6 +48,7 @@ export default function Sales() {
   const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
   const [formError, setFormError] = useState("");
   const [showOnlyToday, setShowOnlyToday] = useState(false);
+  const [search, setSearch] = useState("");
 
   const totalAmount = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0),
@@ -441,6 +443,16 @@ export default function Sales() {
   const todayKey = new Date().toISOString().slice(0, 10);
   const todaysInvoices = (invoices ?? []).filter((inv: Invoice) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) === todayKey);
 
+  const filteredBaseInvoices = useMemo(() => {
+    const base = showOnlyToday ? todaysInvoices : invoices ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter((inv: Invoice) => {
+      const hay = [inv.invoice_number, inv.customers?.name, String(inv.total_amount), inv.status].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [invoices, todaysInvoices, showOnlyToday, search]);
+
   return (
     <div className="page">
       <div className="page-header">
@@ -595,12 +607,15 @@ export default function Sales() {
       )}
 
       <div className="data-card">
-        <div className="table-toolbar">
+          <div className="table-toolbar">
           <div>
             <p className="panel-title">Factures recentes</p>
             <p>{invoices?.length ?? 0} facture(s) enregistree(s)</p>
           </div>
           <div className="dashboard-filters">
+            <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+              <FilterBar value={search} onChange={setSearch} placeholder="Rechercher factures, client ou status" />
+            </div>
             <label style={{display: 'flex', gap: 8, alignItems: 'center'}}>
               <input type="checkbox" checked={showOnlyToday} onChange={(e) => setShowOnlyToday(e.target.checked)} />
               Aujourd'hui
@@ -621,7 +636,7 @@ export default function Sales() {
               </tr>
             </thead>
             <tbody>
-              {((showOnlyToday ? todaysInvoices : (invoices ?? []) as Invoice[]) as Invoice[]).map((invoice) => (
+              {(filteredBaseInvoices as Invoice[]).map((invoice) => (
                 <tr key={invoice.id}>
                   <td className="strong-cell">{invoice.invoice_number}</td>
                   <td>{invoice.customers?.name || "N/A"}</td>

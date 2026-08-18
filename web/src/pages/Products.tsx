@@ -4,6 +4,8 @@ import { useCategories } from "../hooks/useCategories";
 import { useProducts, useCreateProduct, useDeleteProduct, useUpdateProduct } from "../hooks/useProducts";
 import type { Product } from "../hooks/useProducts";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo } from "react";
+import FilterBar from "../components/FilterBar";
 
 export default function Products() {
   const { data: products, isLoading } = useProducts();
@@ -28,6 +30,17 @@ export default function Products() {
     setEditingProductId(null);
     setFormError("");
   };
+
+  const [search, setSearch] = useState("");
+
+  const filteredProducts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return products ?? [];
+    return (products ?? []).filter((p) => {
+      const hay = [p.name, p.reference, p.categories?.name].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [products, search]);
 
   const startEdit = (product: Product) => {
     setName(product.name);
@@ -139,6 +152,10 @@ export default function Products() {
           </div>
           <span className="badge">Stock</span>
         </div>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+          <FilterBar value={search} onChange={setSearch} placeholder="Rechercher produits, reference ou categorie" />
+          <div style={{width: 12}} />
+        </div>
         <div className="table-wrap">
           <table className="data-table">
             <thead>
@@ -151,7 +168,7 @@ export default function Products() {
               </tr>
             </thead>
             <tbody>
-              {products?.map((product) => (
+              {filteredProducts?.map((product) => (
                 <tr key={product.id}>
                   <td>{product.reference}</td>
                   <td className="strong-cell">{product.name}</td>

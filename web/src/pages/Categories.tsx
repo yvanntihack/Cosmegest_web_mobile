@@ -1,5 +1,6 @@
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import FilterBar from "../components/FilterBar";
 import type { FormEvent } from "react";
 import {
   useCategories,
@@ -49,7 +50,15 @@ export default function Categories() {
     }
   };
 
+  const [search, setSearch] = useState("");
+
   if (isLoading) return <div className="loading-state">Chargement...</div>;
+
+  const filteredCategories = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return categories ?? [];
+    return (categories ?? []).filter((c) => (c.name || "").toLowerCase().includes(q));
+  }, [categories, search]);
 
   return (
     <div className="page">
@@ -92,6 +101,10 @@ export default function Categories() {
           </div>
           <span className="badge">Catalogue</span>
         </div>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+          <FilterBar value={search} onChange={setSearch} placeholder="Rechercher categories" />
+          <div style={{width: 12}} />
+        </div>
         <div className="table-wrap">
           <table className="data-table">
             <thead>
@@ -102,7 +115,7 @@ export default function Categories() {
               </tr>
             </thead>
             <tbody>
-              {categories?.map((category) => (
+              {filteredCategories?.map((category) => (
                 <tr key={category.id}>
                   <td className="strong-cell">{category.name}</td>
                   <td>{new Date(category.created_at).toLocaleDateString("fr-FR")}</td>
