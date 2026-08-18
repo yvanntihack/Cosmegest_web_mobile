@@ -457,6 +457,31 @@ export default function Sales() {
     });
   }, [invoices, todaysInvoices, showOnlyToday, search]);
 
+  // Determine product type (Grossiste / Détaillant) by grouping similar names
+  const productTypes = useMemo(() => {
+    const list = products ?? [];
+    const groups: Record<string, typeof list> = {};
+    list.forEach((p) => {
+      const base = String(p.name || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/gi, "")
+        .replace(/\s+\d+$/, "")
+        .trim();
+      const key = base || p.name;
+      groups[key] = groups[key] || [];
+      groups[key].push(p);
+    });
+    const map: Record<string, string> = {};
+    Object.values(groups).forEach((items) => {
+      const prices = items.map((it) => Number(it.selling_price || 0));
+      const min = Math.min(...prices);
+      items.forEach((it) => {
+        map[it.id] = Number(it.selling_price || 0) === min ? "Grossiste" : "Détaillant";
+      });
+    });
+    return map;
+  }, [products]);
+
   try {
   return (
     <div className="page">
@@ -633,11 +658,14 @@ export default function Sales() {
                       required
                     >
                       <option value="">Selectionner</option>
-                      {products?.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.reference} - {product.name}
-                        </option>
-                      ))}
+                      {products?.map((product) => {
+                        const type = productTypes[product.id];
+                        return (
+                          <option key={product.id} value={product.id}>
+                            {product.reference} - {product.name} {type ? `(${type})` : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                   <div className="field">
