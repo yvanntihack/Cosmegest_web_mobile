@@ -177,6 +177,30 @@ export default function Dashboard() {
         </div>
         <div className="stat-card">
           <div>
+            <p className="stat-label">Ventes aujourd'hui</p>
+            <p className="stat-value">
+              {isLoading
+                ? "--"
+                : formatCurrency(
+                    (stats?.sales ?? [])
+                      .filter((s) => String(s.invoice_date ?? s.created_at ?? "").slice(0, 10) === new Date().toISOString().slice(0, 10))
+                      .reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0),
+                  )}
+            </p>
+            <p className="stat-note">
+              {isLoading
+                ? "--"
+                : (stats?.sales ?? []).filter((s) => String(s.invoice_date ?? s.created_at ?? "").slice(0, 10) === new Date().toISOString().slice(0, 10)).length +
+                  " facture(s)"
+              }
+            </p>
+          </div>
+          <div className="stat-icon">
+            <ReceiptText size={22} />
+          </div>
+        </div>
+        <div className="stat-card">
+          <div>
             <p className="stat-label">Produits actifs</p>
             <p className="stat-value">{stats?.products ?? "--"}</p>
             <p className="stat-note">Catalogue disponible</p>

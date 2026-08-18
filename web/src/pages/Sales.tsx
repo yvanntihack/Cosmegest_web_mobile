@@ -46,6 +46,7 @@ export default function Sales() {
   const [status, setStatus] = useState("emise");
   const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
   const [formError, setFormError] = useState("");
+  const [showOnlyToday, setShowOnlyToday] = useState(false);
 
   const totalAmount = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0),
@@ -417,6 +418,10 @@ export default function Sales() {
 
   if (isLoading) return <div className="loading-state">Chargement...</div>;
 
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todaysInvoices = (invoices ?? []).filter((inv: any) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) === todayKey);
+  const otherInvoices = (invoices ?? []).filter((inv: any) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) !== todayKey);
+
   return (
     <div className="page">
       <div className="page-header">
@@ -576,7 +581,13 @@ export default function Sales() {
             <p className="panel-title">Factures recentes</p>
             <p>{invoices?.length ?? 0} facture(s) enregistree(s)</p>
           </div>
-          <span className="badge">Ventes</span>
+          <div className="dashboard-filters">
+            <label style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+              <input type="checkbox" checked={showOnlyToday} onChange={(e) => setShowOnlyToday(e.target.checked)} />
+              Aujourd'hui
+            </label>
+            <span className="badge">Ventes</span>
+          </div>
         </div>
         <div className="table-wrap">
           <table className="data-table">
@@ -591,7 +602,7 @@ export default function Sales() {
               </tr>
             </thead>
             <tbody>
-              {invoices?.map((invoice: any) => (
+              {(showOnlyToday ? todaysInvoices : invoices ?? []).map((invoice: any) => (
                 <tr key={invoice.id}>
                   <td className="strong-cell">{invoice.invoice_number}</td>
                   <td>{invoice.customers?.name || "N/A"}</td>

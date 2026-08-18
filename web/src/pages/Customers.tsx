@@ -68,6 +68,9 @@ export default function Customers() {
   };
 
   if (isLoading) return <div className="loading-state">Chargement...</div>;
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todaysClients = (customers ?? []).filter((c: any) => String(c.created_at ?? "").slice(0, 10) === todayKey);
+  const otherClients = (customers ?? []).filter((c: any) => String(c.created_at ?? "").slice(0, 10) !== todayKey);
 
   return (
     <div className="page">
@@ -128,10 +131,10 @@ export default function Customers() {
       <div className="data-card">
         <div className="table-toolbar">
           <div>
-            <p className="panel-title">Liste des clients</p>
-            <p>{customers?.length ?? 0} client(s) enregistre(s)</p>
+            <p className="panel-title">Clients du jour</p>
+            <p>{todaysClients.length} client(s) aujourd'hui</p>
           </div>
-          <span className="badge">CRM</span>
+          <span className="badge">Nouveaux</span>
         </div>
         <div className="table-wrap">
           <table className="data-table">
@@ -145,7 +148,7 @@ export default function Customers() {
               </tr>
             </thead>
             <tbody>
-              {customers?.map((customer) => (
+              {todaysClients.map((customer) => (
                 <tr key={customer.id}>
                   <td>{customer.code}</td>
                   <td className="strong-cell">{customer.name}</td>
@@ -175,7 +178,60 @@ export default function Customers() {
             </tbody>
           </table>
         </div>
-        {!customers?.length && <div className="empty-state">Aucun client pour le moment.</div>}
+        {!todaysClients.length && <div className="empty-state">Aucun nouveau client aujourd'hui.</div>}
+      </div>
+
+      <div className="data-card">
+        <div className="table-toolbar">
+          <div>
+            <p className="panel-title">Autres clients</p>
+            <p>{otherClients.length} client(s) enregistre(s)</p>
+          </div>
+          <span className="badge">CRM</span>
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Telephone</th>
+                <th>Segment</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {otherClients.map((customer) => (
+                <tr key={customer.id}>
+                  <td>{customer.code}</td>
+                  <td className="strong-cell">{customer.name}</td>
+                  <td>{customer.phone || "N/A"}</td>
+                  <td><span className="badge badge-muted">{customer.segment || "Standard"}</span></td>
+                  <td>
+                    <div className="row-actions">
+                      <button
+                        onClick={() => startEdit(customer)}
+                        className="secondary-icon-button"
+                        aria-label="Modifier le client"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(customer)}
+                        className="danger-button"
+                        aria-label="Supprimer le client"
+                        disabled={deleteCustomer.isPending}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!otherClients.length && <div className="empty-state">Aucun client pour le moment.</div>}
       </div>
     </div>
   );
