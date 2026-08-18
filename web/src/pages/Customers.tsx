@@ -69,8 +69,9 @@ export default function Customers() {
 
   if (isLoading) return <div className="loading-state">Chargement...</div>;
   const todayKey = new Date().toISOString().slice(0, 10);
-  const todaysClients = (customers ?? []).filter((c: any) => String(c.created_at ?? "").slice(0, 10) === todayKey);
-  const otherClients = (customers ?? []).filter((c: any) => String(c.created_at ?? "").slice(0, 10) !== todayKey);
+  type CustomerWithMeta = Customer & { created_at?: string | null };
+  const todaysClients = (customers ?? []).filter((c: CustomerWithMeta) => String(c.created_at ?? "").slice(0, 10) === todayKey);
+  const otherClients = (customers ?? []).filter((c: CustomerWithMeta) => String(c.created_at ?? "").slice(0, 10) !== todayKey);
 
   return (
     <div className="page">

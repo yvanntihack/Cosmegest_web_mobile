@@ -63,7 +63,27 @@ export default function Sales() {
     setFormError("");
   };
 
-  const startEdit = (invoice: any) => {
+  type InvoiceLine = {
+    product_id?: string;
+    quantity?: number | string | null;
+    unit_price?: number | string | null;
+    total_price?: number | string | null;
+    products?: { name?: string } | null;
+  };
+
+  type Invoice = {
+    id: string;
+    invoice_number?: string;
+    customer_id?: string | null;
+    customers?: { name?: string } | null;
+    invoice_date?: string | null;
+    created_at?: string | null;
+    status?: string | null;
+    total_amount?: number | string | null;
+    invoice_lines?: InvoiceLine[];
+  };
+
+  const startEdit = (invoice: Invoice) => {
     setEditingInvoiceId(invoice.id);
     setCurrentInvoiceNumber(invoice.invoice_number);
     setCustomerId(invoice.customer_id ?? "");
@@ -72,7 +92,7 @@ export default function Sales() {
     setFormError("");
     setLines(
       invoice.invoice_lines?.length
-        ? invoice.invoice_lines.map((line: any) => ({
+        ? invoice.invoice_lines!.map((line: InvoiceLine) => ({
             id: crypto.randomUUID(),
             productId: line.product_id ?? "",
             quantity: Number(line.quantity) || 1,
@@ -103,13 +123,13 @@ export default function Sales() {
     );
   };
 
-  const exportInvoicePdf = (invoice: any) => {
+  const exportInvoicePdf = (invoice: Invoice) => {
     const printableWindow = window.open("", "_blank", "width=900,height=700");
     if (!printableWindow) return;
 
-    const invoiceLines = invoice.invoice_lines ?? [];
+    const invoiceLines = (invoice.invoice_lines ?? []) as InvoiceLine[];
     const rows = invoiceLines
-      .map((line: any) => {
+      .map((line: InvoiceLine) => {
         const quantity = Number(line.quantity) || 0;
         const unitPrice = Number(line.unit_price) || 0;
         const totalPrice = Number(line.total_price) || quantity * unitPrice;
@@ -419,8 +439,7 @@ export default function Sales() {
   if (isLoading) return <div className="loading-state">Chargement...</div>;
 
   const todayKey = new Date().toISOString().slice(0, 10);
-  const todaysInvoices = (invoices ?? []).filter((inv: any) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) === todayKey);
-  const otherInvoices = (invoices ?? []).filter((inv: any) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) !== todayKey);
+  const todaysInvoices = (invoices ?? []).filter((inv: Invoice) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) === todayKey);
 
   return (
     <div className="page">
@@ -602,7 +621,7 @@ export default function Sales() {
               </tr>
             </thead>
             <tbody>
-              {(showOnlyToday ? todaysInvoices : invoices ?? []).map((invoice: any) => (
+              {((showOnlyToday ? todaysInvoices : (invoices ?? []) as Invoice[]) as Invoice[]).map((invoice) => (
                 <tr key={invoice.id}>
                   <td className="strong-cell">{invoice.invoice_number}</td>
                   <td>{invoice.customers?.name || "N/A"}</td>

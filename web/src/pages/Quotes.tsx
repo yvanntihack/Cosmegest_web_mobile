@@ -193,8 +193,8 @@ export default function Quotes() {
     createQuote.mutate(
       { ...currentQuote, number: undefined, customerId },
       {
-        onSuccess: (createdQuote: any) => {
-          const createdNumber = createdQuote.quote_number ?? quoteNo;
+        onSuccess: (createdQuote: Record<string, unknown>) => {
+          const createdNumber = String(createdQuote["quote_number"] ?? quoteNo);
 
           setQuoteNo(createdNumber);
           setQuoteCreated(true);

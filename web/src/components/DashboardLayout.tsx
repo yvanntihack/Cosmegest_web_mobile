@@ -66,9 +66,9 @@ export default function DashboardLayout() {
         type: "Categorie",
         path: "/categories",
       })),
-      ...((invoices ?? []) as any[]).map((invoice) => ({
-        title: invoice.invoice_number,
-        subtitle: `${invoice.customers?.name || "Client non renseigne"} - ${invoice.total_amount || 0} FCFA`,
+      ...((invoices ?? []) as Array<Record<string, unknown>>).map((invoice) => ({
+        title: String(invoice["invoice_number"] ?? ""),
+        subtitle: `${String(((invoice["customers"] as Record<string, unknown>) || {})["name"] ?? "Client non renseigne")} - ${String(invoice["total_amount"] ?? 0)} FCFA`,
         type: "Facture",
         path: "/ventes",
       })),
@@ -88,8 +88,12 @@ export default function DashboardLayout() {
   }, [categories, customers, invoices, normalizedSearch, products, quotes]);
 
   const notifications = useMemo(() => {
-    const draftInvoices = ((invoices ?? []) as any[]).filter((invoice) => invoice.status === "brouillon");
-    const unpaidInvoices = ((invoices ?? []) as any[]).filter((invoice) => invoice.status === "emise");
+    const draftInvoices = ((invoices ?? []) as Array<Record<string, unknown>>).filter(
+      (invoice) => String(invoice["status"]) === "brouillon",
+    );
+    const unpaidInvoices = ((invoices ?? []) as Array<Record<string, unknown>>).filter(
+      (invoice) => String(invoice["status"]) === "emise",
+    );
     const emptyProducts = (products ?? []).filter((product) => Number(product.selling_price) <= 0);
 
     return [

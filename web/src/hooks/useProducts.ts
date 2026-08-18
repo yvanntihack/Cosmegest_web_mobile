@@ -62,13 +62,13 @@ export const useDeleteProduct = () => {
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Product> }) => {
       const payload = {
         ...updates,
-        name: typeof updates.name === "string" ? updates.name.trim() : updates.name,
-        reference: typeof updates.reference === "string" ? updates.reference.trim() : updates.reference,
-        category_id: updates.category_id || null,
-      };
+        name: typeof updates?.name === "string" ? updates.name.trim() : updates?.name,
+        reference: typeof updates?.reference === "string" ? updates.reference.trim() : updates?.reference,
+        category_id: updates?.category_id || null,
+      } as Partial<Product>;
       const { data, error } = await supabase
         .from("products")
         .update(payload)

@@ -47,15 +47,15 @@ const lineGroups: Array<{ type: QuoteLineType; key: keyof Pick<QuoteData, "artic
   { type: "mockups", key: "mockups" },
 ];
 
-const toLine = (line: any): QuoteLine => ({
-  id: line.id,
-  label: line.label ?? "",
-  quantity: Number(line.quantity) || 0,
-  unitPrice: Number(line.unit_price) || 0,
+const toLine = (line: Record<string, unknown>): QuoteLine => ({
+  id: String(line["id"] ?? ""),
+  label: String(line["label"] ?? ""),
+  quantity: Number(line["quantity"] ?? 0) || 0,
+  unitPrice: Number(line["unit_price"] ?? 0) || 0,
 });
 
-const linesByType = (lines: any[] | null | undefined, type: QuoteLineType) =>
-  (lines ?? []).filter((line) => line.line_type === type).map(toLine);
+const linesByType = (lines: Array<Record<string, unknown>> | null | undefined, type: QuoteLineType) =>
+  (lines ?? []).filter((line) => String(line["line_type"]) === type).map(toLine);
 
 const lineTotal = (line: QuoteLine) => line.quantity * line.unitPrice;
 
@@ -87,27 +87,27 @@ export const useQuotes = () => {
 
       if (error) throw error;
 
-      return (data ?? []).map((quote: any): QuoteData => ({
-        id: quote.id,
-        number: quote.quote_number,
-        clientName: quote.customers?.name ?? "",
-        quoteDate: quote.quote_date,
-        buyer: quote.buyer ?? "",
-        dueDate: quote.due_date ?? "",
-        structureName: quote.structure_name ?? "",
-        rangeName: quote.range_name ?? "",
-        productName: quote.product_name ?? "",
-        dominantColors: quote.dominant_colors ?? "",
-        additionalInfo: quote.additional_info ?? "",
-        articles: linesByType(quote.quote_lines, "articles"),
-        containers: linesByType(quote.quote_lines, "containers"),
-        packagingPrints: linesByType(quote.quote_lines, "packaging_prints"),
-        labels: linesByType(quote.quote_lines, "labels"),
-        mockups: linesByType(quote.quote_lines, "mockups"),
-        logoPrice: Number(quote.logo_price) || 0,
-        discount: Number(quote.discount) || 0,
-        subtotal: Number(quote.subtotal) || 0,
-        total: Number(quote.total) || 0,
+      return (data ?? []).map((quote: Record<string, unknown>): QuoteData => ({
+        id: String(quote["id"] ?? undefined) || undefined,
+        number: String(quote["quote_number"] ?? ""),
+        clientName: String(((quote["customers"] as Record<string, unknown>) || {})["name"] ?? ""),
+        quoteDate: String(quote["quote_date"] ?? ""),
+        buyer: String(quote["buyer"] ?? ""),
+        dueDate: String(quote["due_date"] ?? ""),
+        structureName: String(quote["structure_name"] ?? ""),
+        rangeName: String(quote["range_name"] ?? ""),
+        productName: String(quote["product_name"] ?? ""),
+        dominantColors: String(quote["dominant_colors"] ?? ""),
+        additionalInfo: String(quote["additional_info"] ?? ""),
+        articles: linesByType(quote["quote_lines"] as Array<Record<string, unknown>> | null | undefined, "articles"),
+        containers: linesByType(quote["quote_lines"] as Array<Record<string, unknown>> | null | undefined, "containers"),
+        packagingPrints: linesByType(quote["quote_lines"] as Array<Record<string, unknown>> | null | undefined, "packaging_prints"),
+        labels: linesByType(quote["quote_lines"] as Array<Record<string, unknown>> | null | undefined, "labels"),
+        mockups: linesByType(quote["quote_lines"] as Array<Record<string, unknown>> | null | undefined, "mockups"),
+        logoPrice: Number(quote["logo_price"] ?? 0) || 0,
+        discount: Number(quote["discount"] ?? 0) || 0,
+        subtotal: Number(quote["subtotal"] ?? 0) || 0,
+        total: Number(quote["total"] ?? 0) || 0,
       }));
     },
   });
