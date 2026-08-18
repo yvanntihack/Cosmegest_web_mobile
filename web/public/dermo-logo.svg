@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="Dermo logo">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0%" stop-color="#db2777" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#g)" />
+  <g fill="#fff" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="36" text-anchor="middle">
+    <text x="50%" y="54%">Dermo</text>
+  </g>
+</svg>
