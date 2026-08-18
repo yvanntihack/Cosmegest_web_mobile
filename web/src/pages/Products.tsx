@@ -161,6 +161,9 @@ export default function Products() {
           <div className="field">
             <label>Prix grossiste (optionnel)</label>
             <input type="number" min="0" value={wholesalePrice} onChange={(e) => setWholesalePrice(e.target.value)} />
+            <p className="field-note" style={{ marginTop: 6, color: '#6b7280', fontSize: 13 }}>
+              Laisser vide si vous n'utilisez pas de prix grossiste. Le type de prix est géré automatiquement.
+            </p>
           </div>
           <button type="submit" className="success-button" disabled={createProduct.isPending || updateProduct.isPending}>
             {createProduct.isPending || updateProduct.isPending ? "Enregistrement..." : editingProductId ? "Modifier" : "Valider"}
