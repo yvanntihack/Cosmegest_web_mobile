@@ -4,6 +4,7 @@ import { useCustomers, useCreateCustomer, useDeleteCustomer, useUpdateCustomer }
 import type { Customer } from "../hooks/useCustomers";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import FilterBar from "../components/FilterBar";
+import { enqueueOperation } from "../lib/offline";
 
 export default function Customers() {
   const { data: customers, isLoading } = useCustomers();
@@ -53,11 +54,18 @@ export default function Customers() {
       },
     };
 
+    const payload = { name: trimmedName, code, phone, segment };
+    if (!navigator.onLine) {
+      // Offline: enqueue the create operation and optimistically update UI
+      enqueueOperation("create_customer", payload);
+      options.onSuccess();
+      return;
+    }
+
     if (editingCustomerId) {
-      const payload = { name: trimmedName, code, phone, segment };
       updateCustomer.mutate({ id: editingCustomerId, updates: payload }, options);
     } else {
-      createCustomer.mutate({ name: trimmedName, code, phone, segment }, options);
+      createCustomer.mutate(payload, options);
     }
   };
 

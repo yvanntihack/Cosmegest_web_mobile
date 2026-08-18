@@ -1,5 +1,6 @@
 import { FileText, Pencil, Plus, ReceiptText, Trash2, X } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
+import { enqueueOperation } from "../lib/offline";
 import FilterBar from "../components/FilterBar";
 import type { FormEvent } from "react";
 import { useCustomers } from "../hooks/useCustomers";
@@ -435,6 +436,17 @@ export default function Sales() {
         setFormError(error.message || "Impossible d'enregistrer la facture.");
       },
     };
+
+    if (!navigator.onLine) {
+      if (editingInvoiceId) {
+        setFormError("Modification hors-ligne non supportee. Connectez-vous puis reessayez.");
+        return;
+      }
+      // Enqueue create invoice operation for later sync
+      enqueueOperation("create_invoice", payload);
+      options.onSuccess();
+      return;
+    }
 
     if (editingInvoiceId) {
       updateInvoice.mutate({ id: editingInvoiceId, ...payload }, options);
