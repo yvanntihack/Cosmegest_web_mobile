@@ -443,7 +443,7 @@ export default function Sales() {
     }
   };
 
-  if (isLoading) return <div className="loading-state">Chargement...</div>;
+  // Render loading UI inside main JSX to avoid conditional hook calls
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const todaysInvoices = (invoices ?? []).filter((inv: Invoice) => String(inv.invoice_date ?? inv.created_at ?? "").slice(0, 10) === todayKey);
@@ -502,6 +502,7 @@ export default function Sales() {
   try {
   return (
     <div className="page">
+      {isLoading && <div className="loading-state">Chargement...</div>}
       <div className="page-header">
         <div>
           <p className="eyebrow">Commercial</p>
