@@ -331,17 +331,35 @@ export default function Dashboard() {
               <p>Top 5 par montant</p>
             </div>
           </div>
-          <div className="client-list">
-            {topClientsAll.length === 0 && <div className="empty-state">Aucun client pour le moment.</div>}
-            {topClientsAll.map((c) => (
-              <div key={c.id} className="client-item">
-                <div>
-                  <strong>{c.name}</strong>
-                  <div className="table-subtext">{c.count} facture(s)</div>
-                </div>
-                <div className="client-amount">{formatCurrency(c.amount)}</div>
-              </div>
-            ))}
+          <div className="client-table-wrap">
+            {topClientsAll.length === 0 ? (
+              <div className="empty-state">Aucun client pour le moment.</div>
+            ) : (
+              <table className="client-table">
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Factures</th>
+                    <th className="col-amount">Montant</th>
+                    <th className="col-action" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {topClientsAll.map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        <div className="client-name">{c.name}</div>
+                      </td>
+                      <td className="col-count">{c.count}</td>
+                      <td className="col-amount">{formatCurrency(c.amount)}</td>
+                      <td className="col-action">
+                        <a className="view-button" href="/customers">Voir</a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
         <section className="activity-panel">

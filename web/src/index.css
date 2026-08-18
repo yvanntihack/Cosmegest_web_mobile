@@ -799,6 +799,24 @@ topbar-popover button {
   background: #ffffff;
 }
 
+/* Best clients table styles */
+.best-clients .client-table-wrap { margin-top: 12px; }
+.best-clients .client-table { width: 100%; border-collapse: collapse; }
+.best-clients thead th { text-align: left; padding: 10px 12px; font-size: 12px; color: #64748b; font-weight: 800; border-bottom: 1px solid #eef2f7; }
+.best-clients tbody td { padding: 12px; border-bottom: 1px solid #fbfcfd; vertical-align: middle; }
+.best-clients .client-name { font-weight: 800; color: #0f172a; }
+.best-clients .col-amount { text-align: right; font-weight: 800; color: #0f172a; }
+.best-clients .col-count { width: 100px; color: #64748b; font-weight: 700; }
+.best-clients .col-action { width: 86px; text-align: right; }
+.best-clients .view-button { display:inline-block; padding:6px 10px; border-radius:8px; background:#0e7490; color:#fff; font-weight:800; text-decoration:none; }
+.best-clients .view-button:hover { background:#155e75; }
+
+@media (max-width: 720px) {
+  .best-clients thead { display: none; }
+  .best-clients tbody td { display: flex; justify-content: space-between; padding: 10px 12px; }
+  .best-clients .col-action { align-self: center; }
+}
+
 .rank-number {
   display: grid;
   width: 34px;
