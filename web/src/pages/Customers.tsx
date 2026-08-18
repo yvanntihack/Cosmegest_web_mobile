@@ -14,7 +14,7 @@ export default function Customers() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [phone, setPhone] = useState("");
-  const [segment, setSegment] = useState("particulier");
+  const [segment, setSegment] = useState("detaillant");
   const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState("");
@@ -23,7 +23,7 @@ export default function Customers() {
     setName("");
     setCode("");
     setPhone("");
-    setSegment("particulier");
+    setSegment("detaillant");
     setEditingCustomerId(null);
     setFormError("");
   };
@@ -32,7 +32,7 @@ export default function Customers() {
     setName(customer.name);
     setCode(customer.code);
     setPhone(customer.phone ?? "");
-    setSegment(customer.segment ?? "particulier");
+    setSegment(customer.segment ?? "detaillant");
     setEditingCustomerId(customer.id);
     setFormError("");
     setShowForm(true);
@@ -131,9 +131,8 @@ export default function Customers() {
           <div className="field">
             <label>Segment</label>
             <select value={segment} onChange={(e) => setSegment(e.target.value)}>
-              <option value="particulier">Particulier</option>
-              <option value="professionnel">Professionnel</option>
-              <option value="revendeur">Revendeur</option>
+              <option value="detaillant">Détaillant</option>
+              <option value="grossiste">Grossiste</option>
             </select>
           </div>
           <button type="submit" className="success-button" disabled={createCustomer.isPending || updateCustomer.isPending}>

@@ -42,6 +42,22 @@ export default function Products() {
     });
   }, [products, search]);
 
+  const grouped = useMemo(() => {
+    const list = filteredProducts ?? [];
+    const groups: Record<string, typeof list> = {};
+    list.forEach((p) => {
+      const base = String(p.name || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/gi, "")
+        .replace(/\s+\d+$/, "")
+        .trim();
+      const key = base || p.name;
+      groups[key] = groups[key] || [];
+      groups[key].push(p);
+    });
+    return Object.keys(groups).map((k) => ({ base: k, items: groups[k] }));
+  }, [filteredProducts]);
+
   const startEdit = (product: Product) => {
     setName(product.name);
     setReference(product.reference);
@@ -164,36 +180,85 @@ export default function Products() {
                 <th>Nom</th>
                 <th>Categorie</th>
                 <th>Prix</th>
+                <th>Type</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts?.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.reference}</td>
-                  <td className="strong-cell">{product.name}</td>
-                  <td>{product.categories?.name || "N/A"}</td>
-                  <td className="strong-cell">{product.selling_price} FCFA</td>
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        onClick={() => startEdit(product)}
-                        className="secondary-icon-button"
-                        aria-label="Modifier le produit"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => deleteProduct.mutate(product.id)}
-                        className="danger-button"
-                        aria-label="Supprimer le produit"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {grouped.map((g) => {
+                if (g.items.length === 1) {
+                  const product = g.items[0];
+                  return (
+                    <tr key={product.id}>
+                      <td>{product.reference}</td>
+                      <td className="strong-cell">{product.name}</td>
+                      <td>{product.categories?.name || "N/A"}</td>
+                      <td className="strong-cell">{product.selling_price} FCFA</td>
+                      <td><span className="badge badge-muted">Standard</span></td>
+                      <td>
+                        <div className="row-actions">
+                          <button
+                            onClick={() => startEdit(product)}
+                            className="secondary-icon-button"
+                            aria-label="Modifier le produit"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteProduct.mutate(product.id)}
+                            className="danger-button"
+                            aria-label="Supprimer le produit"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                // multiple variants with same base name -> show group header then variants
+                const prices = g.items.map((it) => Number(it.selling_price || 0));
+                const min = Math.min(...prices);
+
+                return (
+                  <>
+                    <tr key={g.base} className="group-header">
+                      <td colSpan={6} style={{ fontWeight: 700 }}>{g.base.toUpperCase()}</td>
+                    </tr>
+                    {g.items.map((product) => {
+                      const type = Number(product.selling_price || 0) === min ? "Grossiste" : "Détaillant";
+                      return (
+                        <tr key={product.id}>
+                          <td>{product.reference}</td>
+                          <td className="strong-cell">{product.name}</td>
+                          <td>{product.categories?.name || "N/A"}</td>
+                          <td className="strong-cell">{product.selling_price} FCFA</td>
+                          <td><span className={`badge ${type === "Grossiste" ? "badge-accent" : "badge-muted"}`}>{type}</span></td>
+                          <td>
+                            <div className="row-actions">
+                              <button
+                                onClick={() => startEdit(product)}
+                                className="secondary-icon-button"
+                                aria-label="Modifier le produit"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                onClick={() => deleteProduct.mutate(product.id)}
+                                className="danger-button"
+                                aria-label="Supprimer le produit"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </>
+                );
+              })}
             </tbody>
           </table>
         </div>
