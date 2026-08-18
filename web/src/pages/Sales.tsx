@@ -1,5 +1,5 @@
 import { FileText, Pencil, Plus, ReceiptText, Trash2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import FilterBar from "../components/FilterBar";
 import type { FormEvent } from "react";
 import { useCustomers } from "../hooks/useCustomers";
@@ -490,6 +490,14 @@ export default function Sales() {
       return [p.name, p.reference].join(" ").toLowerCase().includes(q);
     });
   }, [products, productSearch]);
+
+  useEffect(() => {
+    try {
+      console.debug('Sales: productSearch=', productSearch, 'productsForSelect=', productsForSelect?.length ?? 0);
+    } catch (e) {
+      // ignore
+    }
+  }, [productSearch, productsForSelect]);
 
   try {
   return (
