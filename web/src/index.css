@@ -342,7 +342,7 @@ button {
 .filter-input .icon-button.small:hover { background: rgba(2,6,23,0.04); }
 
 
-.topbar-popover button {
+topbar-popover button {
   display: grid;
   width: 100%;
   gap: 3px;
@@ -352,15 +352,15 @@ button {
   color: #172033;
   background: #ffffff;
   text-align: left;
+}
 
 .payment-options { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.payment-options .chip { position:relative; display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f8fafc; border:1px solid #e6edf3; cursor:pointer; font-size:13px; color:#0f172a; line-height:1; }
-.payment-options .chip input { position:absolute; opacity:0; pointer-events:none; width:0; height:0; }
+.payment-options .chip { position:relative; display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f8fafc; border:1px solid #e6edf3; cursor:pointer; font-size:13px; color:#0f172a; line-height:1; }
+.payment-options .chip input { position:relative; opacity:0; width:0; height:0; margin:0; }
 .payment-options .chip:hover { transform:none; box-shadow:0 4px 10px rgba(2,6,23,0.03); }
 .payment-options .chip.active { background:#e6f6f1; border-color:#34d399; font-weight:600; }
 .payment-options .chip.active::after { content:""; width:6px; height:6px; border-radius:2px; background:#059669; display:inline-block; margin-left:6px; }
 .payment-options .chip span.label { display:inline-block; vertical-align:middle; }
-}
 
 .topbar-popover button:hover {
   background: #f8fafc;
