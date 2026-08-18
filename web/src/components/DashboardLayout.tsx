@@ -97,16 +97,26 @@ export default function DashboardLayout() {
     const emptyProducts = (products ?? []).filter((product) => Number(product.selling_price) <= 0);
 
     return [
-      ...draftInvoices.slice(0, 3).map((invoice) => ({
-        title: `Facture brouillon ${invoice.invoice_number}`,
-        description: invoice.customers?.name || "Client non renseigne",
-        path: "/ventes",
-      })),
-      ...unpaidInvoices.slice(0, 3).map((invoice) => ({
-        title: `Facture emise ${invoice.invoice_number}`,
-        description: `${invoice.total_amount || 0} FCFA a suivre`,
-        path: "/ventes",
-      })),
+      ...draftInvoices.slice(0, 3).map((invoice) => {
+        const inv = invoice as Record<string, unknown>;
+        const invNum = String(inv["invoice_number"] ?? "");
+        const custName = String(((inv["customers"] as Record<string, unknown>) || {})["name"] ?? "Client non renseigne");
+        return {
+          title: `Facture brouillon ${invNum}`,
+          description: custName,
+          path: "/ventes",
+        };
+      }),
+      ...unpaidInvoices.slice(0, 3).map((invoice) => {
+        const inv = invoice as Record<string, unknown>;
+        const invNum = String(inv["invoice_number"] ?? "");
+        const total = String(inv["total_amount"] ?? 0);
+        return {
+          title: `Facture emise ${invNum}`,
+          description: `${total} FCFA a suivre`,
+          path: "/ventes",
+        };
+      }),
       ...emptyProducts.slice(0, 3).map((product) => ({
         title: `Prix a verifier: ${product.name}`,
         description: product.reference,

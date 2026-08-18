@@ -85,7 +85,7 @@ export default function Sales() {
 
   const startEdit = (invoice: Invoice) => {
     setEditingInvoiceId(invoice.id);
-    setCurrentInvoiceNumber(invoice.invoice_number);
+    setCurrentInvoiceNumber(invoice.invoice_number ?? "");
     setCustomerId(invoice.customer_id ?? "");
     setInvoiceDate(invoice.invoice_date ?? today());
     setStatus(invoice.status ?? "emise");
@@ -315,13 +315,13 @@ export default function Sales() {
                 <table class="info-table">
                   <tbody>
                     <tr>
-                      <th>Numero</th>
-                      <td>${escapeHtml(invoice.invoice_number)}</td>
-                    </tr>
-                    <tr>
-                      <th>Date</th>
-                      <td>${new Date(invoice.invoice_date).toLocaleDateString("fr-FR")}</td>
-                    </tr>
+                          <th>Numero</th>
+                          <td>${escapeHtml(invoice.invoice_number)}</td>
+                        </tr>
+                        <tr>
+                          <th>Date</th>
+                          <td>${invoice.invoice_date ? new Date(String(invoice.invoice_date)).toLocaleDateString("fr-FR") : ""}</td>
+                        </tr>
                     <tr>
                       <th>Statut</th>
                       <td>${escapeHtml(invoice.status)}</td>
@@ -625,7 +625,7 @@ export default function Sales() {
                 <tr key={invoice.id}>
                   <td className="strong-cell">{invoice.invoice_number}</td>
                   <td>{invoice.customers?.name || "N/A"}</td>
-                  <td>{new Date(invoice.invoice_date).toLocaleDateString("fr-FR")}</td>
+                  <td>{invoice.invoice_date ? new Date(String(invoice.invoice_date)).toLocaleDateString("fr-FR") : ""}</td>
                   <td className="strong-cell">{formatCurrency(Number(invoice.total_amount))}</td>
                   <td>
                     <span className={`status-pill status-${invoice.status}`}>{invoice.status}</span>
