@@ -164,6 +164,92 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <section className="data-card daily-summary">
+        <div className="table-toolbar">
+          <div>
+            <p className="panel-title">Point du jour</p>
+            <p>Récapitulatif des ventes et produits pour la journée</p>
+          </div>
+        </div>
+
+        <div className="daily-grid">
+          <div className="daily-metrics">
+            <div className="metric">
+              <span className="metric-label">CA aujourd'hui</span>
+              <strong className="metric-value">
+                {formatCurrency(
+                  (stats?.sales ?? [])
+                    .filter((s) => String(s.invoice_date ?? s.created_at ?? "").slice(0, 10) === new Date().toISOString().slice(0, 10))
+                    .reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0),
+                )}
+              </strong>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Factures</span>
+              <strong className="metric-value">
+                {(stats?.sales ?? []).filter((s) => String(s.invoice_date ?? s.created_at ?? "").slice(0, 10) === new Date().toISOString().slice(0, 10)).length}
+              </strong>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Clients uniques</span>
+              <strong className="metric-value">
+                {(() => {
+                  const set = new Set<string>();
+                  for (const p of stats?.purchases ?? []) {
+                    const invDate = String(p.invoices?.invoice_date ?? "").slice(0, 10);
+                    if (invDate !== new Date().toISOString().slice(0, 10)) continue;
+                    const cid = p.invoices?.customers?.id ?? p.invoices?.customer_id ?? "";
+                    if (cid) set.add(String(cid));
+                  }
+                  return set.size;
+                })()}
+              </strong>
+            </div>
+            <div className="metric">
+              <span className="metric-label">Ticket moyen</span>
+              <strong className="metric-value">
+                {(() => {
+                  const todays = (stats?.sales ?? []).filter((s) => String(s.invoice_date ?? s.created_at ?? "").slice(0, 10) === new Date().toISOString().slice(0, 10));
+                  const total = todays.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+                  return todays.length ? formatCurrency(total / todays.length) : formatCurrency(0);
+                })()}
+              </strong>
+            </div>
+          </div>
+
+          <div className="daily-products">
+            <p className="panel-title">Produits vendus aujourd'hui</p>
+            <div className="product-list">
+              {(() => {
+                const map = new Map<string, { name: string; qty: number; amount: number }>();
+                for (const p of stats?.purchases ?? []) {
+                  const invDate = String(p.invoices?.invoice_date ?? "").slice(0, 10);
+                  if (invDate !== new Date().toISOString().slice(0, 10)) continue;
+                  const prod = p.products;
+                  if (!prod) continue;
+                  const entry = map.get(prod.id) ?? { name: prod.name, qty: 0, amount: 0 };
+                  const qty = Number(p.quantity) || 0;
+                  const amt = Number(p.total_price) || qty * (Number(p.unit_price) || 0);
+                  entry.qty += qty;
+                  entry.amount += amt;
+                  map.set(prod.id, entry);
+                }
+                const arr = [...map.entries()].map(([id, v]) => ({ id, ...v })).sort((a, b) => b.qty - a.qty || b.amount - a.amount);
+                if (!arr.length) return <div className="empty-state">Aucun produit vendu aujourd'hui.</div>;
+                return arr.slice(0, 6).map((p) => (
+                  <div key={p.id} className="product-item">
+                    <div>
+                      <strong>{p.name}</strong>
+                      <div className="table-subtext">{p.qty} unité(s) — {formatCurrency(p.amount)}</div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="stats-grid">
         <div className="stat-card">
           <div>
