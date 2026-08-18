@@ -4,7 +4,7 @@ import { useCustomers, useCreateCustomer, useDeleteCustomer, useUpdateCustomer }
 import type { Customer } from "../hooks/useCustomers";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import FilterBar from "../components/FilterBar";
-import { enqueueOperation } from "../lib/offline";
+import { enqueueOperation, getQueue } from "../lib/offline";
 
 export default function Customers() {
   const { data: customers, isLoading } = useCustomers();
@@ -79,6 +79,11 @@ export default function Customers() {
   const [search, setSearch] = useState("");
 
   if (isLoading) return <div className="loading-state">Chargement...</div>;
+
+    const pendingCustomers = useMemo(() => {
+      const q = getQueue().filter((op) => op.type === "create_customer");
+      return q.map((op) => ({ id: op.id, name: op.payload?.name ?? "Client hors-ligne", code: op.payload?.code ?? "", phone: op.payload?.phone ?? "", segment: op.payload?.segment ?? "" }));
+    }, []);
 
   const filteredCustomers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -173,7 +178,7 @@ export default function Customers() {
               </tr>
             </thead>
             <tbody>
-              {todaysClients.map((customer) => (
+              {[...pendingCustomers, ...todaysClients].map((customer) => (
                 <tr key={customer.id}>
                   <td>{customer.code}</td>
                   <td className="strong-cell">{customer.name}</td>

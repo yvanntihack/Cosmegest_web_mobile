@@ -39,6 +39,10 @@ export function getQueue() {
   return loadQueue();
 }
 
+export function getMap() {
+  return loadMap();
+}
+
 export function clearQueue() {
   saveQueue([]);
 }

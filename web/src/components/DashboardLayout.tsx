@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import type { NavLinkRenderProps } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ import { useInvoices } from "../hooks/useInvoices";
 import { useProducts } from "../hooks/useProducts";
 import { useQuotes } from "../hooks/useQuotes";
 import { useAuth } from "../contexts/useAuth";
+import { getQueue } from "../lib/offline";
 
 export default function DashboardLayout() {
   const { user, signOut } = useAuth();
@@ -32,6 +33,24 @@ export default function DashboardLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const update = () => {
+      setIsOnline(navigator.onLine);
+      setPendingCount(getQueue().length);
+    };
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    const iid = setInterval(update, 3000);
+    update();
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+      clearInterval(iid);
+    };
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -231,6 +250,13 @@ export default function DashboardLayout() {
               )}
             </div>
             <div className="notification-area">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 8 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 10, background: isOnline ? "#10b981" : "#ef4444" }} />
+                  <div style={{ color: "#64748b", fontSize: 13 }}>{isOnline ? "En ligne" : "Hors-ligne"}</div>
+                </div>
+                {pendingCount > 0 && <div className="badge">{pendingCount}</div>}
+              </div>
               <button
                 className="icon-button notification-button"
                 aria-label="Notifications"
