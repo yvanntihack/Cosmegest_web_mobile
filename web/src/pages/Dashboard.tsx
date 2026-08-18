@@ -5,7 +5,9 @@ import { useDashboardStats } from "../hooks/useDashboard";
 
 const formatCurrency = (amount: number) => `${amount.toFixed(0)} FCFA`;
 
-const periodOptions = [
+const periodOptions: { label: string; value: number | "today" | "yesterday" }[] = [
+  { label: "Aujourd'hui", value: "today" },
+  { label: "Hier", value: "yesterday" },
   { label: "7 jours", value: 7 },
   { label: "30 jours", value: 30 },
   { label: "90 jours", value: 90 },
@@ -23,26 +25,53 @@ const getMonthKey = (date: Date) => date.toISOString().slice(0, 7);
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useDashboardStats();
-  const [periodDays, setPeriodDays] = useState(7);
+  const [periodDays, setPeriodDays] = useState<number | "today" | "yesterday">(7);
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(() => getMonthKey(new Date()));
 
   const performance = useMemo(() => {
     const today = new Date();
-    const days = Array.from({ length: periodDays }, (_, index) => {
+
+    let days: { key: string; label: string; total: number; count: number }[] = [];
+
+    if (periodDays === "today") {
       const date = new Date(today);
-      date.setDate(today.getDate() - (periodDays - 1 - index));
-      return {
-        key: getDateKey(date),
-        label: date.toLocaleDateString("fr-FR", {
-          day: "2-digit",
-          month: periodDays > 7 ? "2-digit" : undefined,
-          weekday: periodDays === 7 ? "short" : undefined,
-        }),
-        total: 0,
-        count: 0,
-      };
-    });
+      days = [
+        {
+          key: getDateKey(date),
+          label: date.toLocaleDateString("fr-FR", { day: "2-digit" }),
+          total: 0,
+          count: 0,
+        },
+      ];
+    } else if (periodDays === "yesterday") {
+      const date = new Date(today);
+      date.setDate(date.getDate() - 1);
+      days = [
+        {
+          key: getDateKey(date),
+          label: date.toLocaleDateString("fr-FR", { day: "2-digit" }),
+          total: 0,
+          count: 0,
+        },
+      ];
+    } else {
+      const pd = Number(periodDays) || 7;
+      days = Array.from({ length: pd }, (_, index) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (pd - 1 - index));
+        return {
+          key: getDateKey(date),
+          label: date.toLocaleDateString("fr-FR", {
+            day: "2-digit",
+            month: pd > 7 ? "2-digit" : undefined,
+            weekday: pd === 7 ? "short" : undefined,
+          }),
+          total: 0,
+          count: 0,
+        };
+      });
+    }
 
     const byDay = new Map(days.map((day) => [day.key, day]));
 
@@ -373,9 +402,16 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="dashboard-filters">
-              <select value={periodDays} onChange={(event) => setPeriodDays(Number(event.target.value))}>
+              <select
+                value={String(periodDays)}
+                onChange={(event) => {
+                  const v = event.target.value;
+                  if (v === "today" || v === "yesterday") setPeriodDays(v as "today" | "yesterday");
+                  else setPeriodDays(Number(v));
+                }}
+              >
                 {periodOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <option key={String(option.value)} value={String(option.value)}>
                     {option.label}
                   </option>
                 ))}
