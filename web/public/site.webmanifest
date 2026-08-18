@@ -1,0 +1,15 @@
+{
+  "name": "CosmeGest",
+  "short_name": "CosmeGest",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F9D94A",
+  "icons": [
+    {
+      "src": "/dermo-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
