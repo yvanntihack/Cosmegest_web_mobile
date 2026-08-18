@@ -1,7 +1,6 @@
 import { FileText, Pencil, Plus, ReceiptText, Trash2, X } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
-import { getQueue, getMap } from "../lib/offline";
-import { enqueueOperation } from "../lib/offline";
+import { getQueue, getMap, enqueueOperation } from "../lib/offline";
 import FilterBar from "../components/FilterBar";
 import type { FormEvent } from "react";
 import { useCustomers } from "../hooks/useCustomers";
@@ -471,37 +470,44 @@ export default function Sales() {
     });
   }, [invoices, todaysInvoices, showOnlyToday, search]);
 
-  // Build pending invoices from offline queue for display
-  const pendingInvoices = useMemo(() => {
-    const queue = getQueue().filter((op) => op.type === "create_invoice");
-    if (!queue.length) return [] as Invoice[];
-    const map = getMap();
-    return queue.map((op) => {
-      const header = op.payload?.header ?? {};
-      const linesPayload = op.payload?.lines ?? [];
-      // Try to resolve customer name: map -> server customers -> create_customer payload
-      let custName = "Client (hors-ligne)";
-      const resolvedCustomerId = map[header.customer_id] ?? header.customer_id;
-      const serverCustomer = customers?.find((c) => c.id === resolvedCustomerId);
-      if (serverCustomer) custName = serverCustomer.name;
-      else {
-        // find queued create_customer with temp id
-        const createCust = getQueue().find((q) => q.type === "create_customer" && q.id === header.customer_id);
-        if (createCust) custName = createCust.payload?.name ?? custName;
-      }
+  const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const queue = await getQueue();
+        const map = await getMap();
+        const q = queue.filter((op) => op.type === "create_invoice");
+        const invs = q.map((op) => {
+          const header = op.payload?.header ?? {};
+          const linesPayload = op.payload?.lines ?? [];
+          let custName = "Client (hors-ligne)";
+          const resolvedCustomerId = map[header.customer_id] ?? header.customer_id;
+          const serverCustomer = customers?.find((c) => c.id === resolvedCustomerId);
+          if (serverCustomer) custName = serverCustomer.name;
+          else {
+            const createCust = queue.find((qop) => qop.type === "create_customer" && qop.id === header.customer_id);
+            if (createCust) custName = createCust.payload?.name ?? custName;
+          }
 
-      return {
-        id: op.id,
-        invoice_number: header.invoice_number ?? `TEMP-${op.id.slice(-6)}`,
-        customer_id: resolvedCustomerId,
-        customers: { name: custName },
-        invoice_date: header.invoice_date,
-        created_at: new Date(op.createdAt).toISOString(),
-        status: op.status === "synced" ? "emise" : "brouillon",
-        total_amount: header.total_amount ?? linesPayload.reduce((s: number, l: any) => s + (Number(l.total_price) || 0), 0),
-        invoice_lines: linesPayload.map((l: any) => ({ product_id: l.product_id, quantity: l.quantity, unit_price: l.unit_price, total_price: l.total_price })),
-      } as Invoice;
-    });
+          return {
+            id: op.id,
+            invoice_number: header.invoice_number ?? `TEMP-${op.id.slice(-6)}`,
+            customer_id: resolvedCustomerId,
+            customers: { name: custName },
+            invoice_date: header.invoice_date,
+            created_at: new Date(op.createdAt).toISOString(),
+            status: op.status === "synced" ? "emise" : "brouillon",
+            total_amount: header.total_amount ?? linesPayload.reduce((s: number, l: any) => s + (Number(l.total_price) || 0), 0),
+            invoice_lines: linesPayload.map((l: any) => ({ product_id: l.product_id, quantity: l.quantity, unit_price: l.unit_price, total_price: l.total_price })),
+          } as Invoice;
+        });
+        if (mounted) setPendingInvoices(invs);
+      } catch (e) {
+        if (mounted) setPendingInvoices([]);
+      }
+    })();
+    return () => { mounted = false; };
   }, [customers, invoices]);
 
   const displayedInvoices = useMemo(() => {

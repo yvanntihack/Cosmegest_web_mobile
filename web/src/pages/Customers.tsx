@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useCustomers, useCreateCustomer, useDeleteCustomer, useUpdateCustomer } from "../hooks/useCustomers";
 import type { Customer } from "../hooks/useCustomers";
@@ -80,9 +80,19 @@ export default function Customers() {
 
   if (isLoading) return <div className="loading-state">Chargement...</div>;
 
-    const pendingCustomers = useMemo(() => {
-      const q = getQueue().filter((op) => op.type === "create_customer");
-      return q.map((op) => ({ id: op.id, name: op.payload?.name ?? "Client hors-ligne", code: op.payload?.code ?? "", phone: op.payload?.phone ?? "", segment: op.payload?.segment ?? "" }));
+    const [pendingCustomers, setPendingCustomers] = useState<Array<any>>([]);
+    useEffect(() => {
+      let mounted = true;
+      (async () => {
+        try {
+          const q = await getQueue();
+          const pc = q.filter((op) => op.type === "create_customer").map((op: any) => ({ id: op.id, name: op.payload?.name ?? "Client hors-ligne", code: op.payload?.code ?? "", phone: op.payload?.phone ?? "", segment: op.payload?.segment ?? "" }));
+          if (mounted) setPendingCustomers(pc);
+        } catch (e) {
+          if (mounted) setPendingCustomers([]);
+        }
+      })();
+      return () => { mounted = false; };
     }, []);
 
   const filteredCustomers = useMemo(() => {

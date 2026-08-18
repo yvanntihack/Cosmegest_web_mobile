@@ -37,9 +37,14 @@ export default function DashboardLayout() {
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    const update = () => {
+    const update = async () => {
       setIsOnline(navigator.onLine);
-      setPendingCount(getQueue().length);
+      try {
+        const q = await getQueue();
+        setPendingCount(q.length);
+      } catch (e) {
+        setPendingCount(0);
+      }
     };
     window.addEventListener("online", update);
     window.addEventListener("offline", update);

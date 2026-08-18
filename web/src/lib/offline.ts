@@ -1,54 +1,19 @@
 import { supabase } from "./supabase";
-
-type OfflineOp = {
-  id: string;
-  type: string;
-  payload: any;
-  createdAt: number;
-  status: "pending" | "syncing" | "synced" | "failed";
-  result?: any;
-  error?: string;
-};
-
-const KEY = "offline:queue_v1";
-const MAP_KEY = "offline:map_v1";
+import db, { type OfflineOp, getAllQueue, addQueueOp, updateQueueOp, getMap as dbGetMap, setMapping as dbSetMapping } from "./db";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function loadQueue(): OfflineOp[] {
-  try {
-    const raw = localStorage.getItem(KEY) || "[]";
-    return JSON.parse(raw) as OfflineOp[];
-  } catch (e) {
-    console.warn("offline: failed to load queue", e);
-    return [];
-  }
+export async function getQueue() {
+  return await getAllQueue();
 }
 
-function saveQueue(q: OfflineOp[]) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(q));
-  } catch (e) {
-    console.warn("offline: failed to save queue", e);
-  }
+export async function clearQueue() {
+  return await db.queue.clear();
 }
 
-export function getQueue() {
-  return loadQueue();
-}
-
-export function getMap() {
-  return loadMap();
-}
-
-export function clearQueue() {
-  saveQueue([]);
-}
-
-export function enqueueOperation(type: string, payload: any) {
-  const q = loadQueue();
+export async function enqueueOperation(type: string, payload: any) {
   const op: OfflineOp = {
     id: makeId(),
     type,
@@ -56,32 +21,21 @@ export function enqueueOperation(type: string, payload: any) {
     createdAt: Date.now(),
     status: "pending",
   };
-  q.push(op);
-  saveQueue(q);
+  await addQueueOp(op);
   console.debug("offline: enqueued", op);
   return op.id;
 }
 
-function loadMap(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(MAP_KEY) || "{}");
-  } catch (e) {
-    return {};
-  }
+async function loadMap(): Promise<Record<string, string>> {
+  return await dbGetMap();
 }
 
-function saveMap(m: Record<string, string>) {
-  try {
-    localStorage.setItem(MAP_KEY, JSON.stringify(m));
-  } catch (e) {
-    console.warn("offline: failed to save map", e);
-  }
+async function setMapping(tempId: string, realId: string) {
+  return await dbSetMapping(tempId, realId);
 }
 
-function setMapping(tempId: string, realId: string) {
-  const m = loadMap();
-  m[tempId] = realId;
-  saveMap(m);
+export async function getMap() {
+  return await loadMap();
 }
 
 function resolveTempIdsInObject(obj: any, map: Record<string, string>): any {
@@ -131,13 +85,13 @@ async function processOp(op: OfflineOp) {
 }
 
 export async function processQueueOnce() {
-  const q = loadQueue();
+  const q = await getAllQueue();
   if (!q.length) return;
   console.debug("offline: processing queue", q.length);
   for (const item of q) {
     if (item.status === "synced") continue;
     // Resolve any temp ids in payload using map
-    const map = loadMap();
+    const map = await loadMap();
     if (Object.keys(map).length) {
       try {
         item.payload = resolveTempIdsInObject(item.payload, map);
@@ -147,17 +101,18 @@ export async function processQueueOnce() {
     }
 
     item.status = "syncing";
-    saveQueue(q);
+    await updateQueueOp(item);
     const res = await processOp(item);
     // if we created a customer and have a real id, add mapping from op.id -> real id
     try {
       if (item.type === "create_customer" && res.result && res.result.id) {
-        setMapping(item.id, String(res.result.id));
+        await setMapping(item.id, String(res.result.id));
         // after mapping, try to replace other queued payloads
-        const updatedMap = loadMap();
+        const updatedMap = await loadMap();
         for (const other of q) {
           if (other.id === item.id) continue;
           other.payload = resolveTempIdsInObject(other.payload, updatedMap);
+          await updateQueueOp(other);
         }
       }
     } catch (e) {
@@ -165,9 +120,7 @@ export async function processQueueOnce() {
     }
 
     // update queue entry
-    const idx = q.findIndex((x) => x.id === res.id);
-    if (idx >= 0) q[idx] = res;
-    saveQueue(q);
+    await updateQueueOp(res);
   }
 }
 

@@ -10,16 +10,21 @@ function fmtDate(ts: number) {
 }
 
 export default function OfflineQueuePanel() {
-  const [queue, setQueue] = useState(() => getQueue());
+  const [queue, setQueue] = useState<any[]>([]);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    const onOnline = () => setQueue(getQueue());
+    const onOnline = async () => {
+      const q = await getQueue();
+      setQueue(q);
+    };
     window.addEventListener("online", onOnline);
+    // initial load
+    (async () => setQueue(await getQueue()))();
     return () => window.removeEventListener("online", onOnline);
   }, []);
 
-  const refresh = () => setQueue(getQueue());
+  const refresh = async () => setQueue(await getQueue());
 
   const handleResync = async () => {
     setSyncing(true);
