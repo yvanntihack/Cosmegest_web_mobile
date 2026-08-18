@@ -152,6 +152,22 @@ export default function Dashboard() {
     return { bestProduct, topCustomers, topProducts, totalProductQuantity, totalProductRevenue };
   }, [selectedMonth, stats?.purchases]);
 
+  const topClientsAll = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; amount: number; count: number }>();
+    for (const line of stats?.purchases ?? []) {
+      const inv = line.invoices;
+      if (!inv) continue;
+      const id = inv.customer_id ?? inv.customers?.id ?? "unknown";
+      const name = inv.customers?.name ?? "Client non renseigne";
+      const amt = Number(line.total_price) || (Number(line.quantity) * (Number(line.unit_price) || 0)) || 0;
+      if (!map.has(id)) map.set(id, { id, name, amount: 0, count: 0 });
+      const entry = map.get(id)!;
+      entry.amount += amt;
+      entry.count += 1;
+    }
+    return [...map.values()].sort((a, b) => b.amount - a.amount).slice(0, 5);
+  }, [stats?.purchases]);
+
   return (
     <div className="page">
       <div className="page-header">
@@ -308,6 +324,26 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-grid">
+        <section className="data-card best-clients">
+          <div className="table-toolbar">
+            <div>
+              <p className="panel-title">Meilleurs clients</p>
+              <p>Top 5 par montant</p>
+            </div>
+          </div>
+          <div className="client-list">
+            {topClientsAll.length === 0 && <div className="empty-state">Aucun client pour le moment.</div>}
+            {topClientsAll.map((c) => (
+              <div key={c.id} className="client-item">
+                <div>
+                  <strong>{c.name}</strong>
+                  <div className="table-subtext">{c.count} facture(s)</div>
+                </div>
+                <div className="client-amount">{formatCurrency(c.amount)}</div>
+              </div>
+            ))}
+          </div>
+        </section>
         <section className="activity-panel">
           <div className="activity-panel-header">
             <div>
