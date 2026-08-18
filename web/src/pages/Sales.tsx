@@ -48,7 +48,7 @@ export default function Sales() {
   const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
   const [formError, setFormError] = useState("");
   const [showOnlyToday, setShowOnlyToday] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
   const totalAmount = useMemo(
@@ -412,7 +412,9 @@ export default function Sales() {
         customer_id: customerId,
         invoice_date: invoiceDate,
         status,
-        payment_method: paymentMethod || undefined,
+        // keep backward-compatible single string and provide array
+        payment_method: paymentMethods.length ? paymentMethods.join(",") : undefined,
+        payment_methods: paymentMethods.length ? paymentMethods : undefined,
         total_amount: invoiceTotal,
       },
       lines: validLines.map((line) => ({
@@ -526,20 +528,88 @@ export default function Sales() {
               <div className="field">
                 <label>Mode de paiement</label>
                 <div className="payment-options">
-                  <label className={`chip ${paymentMethod === 'wave_madame' ? 'active' : ''}`}>
-                    <input type="radio" name="payment" value="wave_madame" checked={paymentMethod === 'wave_madame'} onChange={(e) => setPaymentMethod(e.target.value)} /> Wave Madame
+                  <label className={`chip ${paymentMethods.includes('wave_mr') ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="payment"
+                      value="wave_mr"
+                      checked={paymentMethods.includes('wave_mr')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPaymentMethods((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+                      }}
+                    />
+                    Wave Mr
                   </label>
-                  <label className={`chip ${paymentMethod === 'wave_mr_koffi' ? 'active' : ''}`}>
-                    <input type="radio" name="payment" value="wave_mr_koffi" checked={paymentMethod === 'wave_mr_koffi'} onChange={(e) => setPaymentMethod(e.target.value)} /> Wave Mr Koffi
+
+                  <label className={`chip ${paymentMethods.includes('wave_mme') ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="payment"
+                      value="wave_mme"
+                      checked={paymentMethods.includes('wave_mme')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPaymentMethods((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+                      }}
+                    />
+                    Wave Mme
                   </label>
-                  <label className={`chip ${paymentMethod === 'orange_money' ? 'active' : ''}`}>
-                    <input type="radio" name="payment" value="orange_money" checked={paymentMethod === 'orange_money'} onChange={(e) => setPaymentMethod(e.target.value)} /> Orange Money
+
+                  <label className={`chip ${paymentMethods.includes('om_mme') ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="payment"
+                      value="om_mme"
+                      checked={paymentMethods.includes('om_mme')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPaymentMethods((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+                      }}
+                    />
+                    OM Mme
                   </label>
-                  <label className={`chip ${paymentMethod === 'momo' ? 'active' : ''}`}>
-                    <input type="radio" name="payment" value="momo" checked={paymentMethod === 'momo'} onChange={(e) => setPaymentMethod(e.target.value)} /> MoMo
+
+                  <label className={`chip ${paymentMethods.includes('om_mr') ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="payment"
+                      value="om_mr"
+                      checked={paymentMethods.includes('om_mr')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPaymentMethods((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+                      }}
+                    />
+                    OM Mr
                   </label>
-                  <label className={`chip ${paymentMethod === 'moov_money' ? 'active' : ''}`}>
-                    <input type="radio" name="payment" value="moov_money" checked={paymentMethod === 'moov_money'} onChange={(e) => setPaymentMethod(e.target.value)} /> Moov Money
+
+                  <label className={`chip ${paymentMethods.includes('momo') ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="payment"
+                      value="momo"
+                      checked={paymentMethods.includes('momo')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPaymentMethods((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+                      }}
+                    />
+                    MoMo
+                  </label>
+
+                  <label className={`chip ${paymentMethods.includes('cash') ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="payment"
+                      value="cash"
+                      checked={paymentMethods.includes('cash')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPaymentMethods((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
+                      }}
+                    />
+                    Cash
                   </label>
                 </div>
               </div>
