@@ -455,6 +455,7 @@ export default function Sales() {
     });
   }, [invoices, todaysInvoices, showOnlyToday, search]);
 
+  try {
   return (
     <div className="page">
       <div className="page-header">
@@ -694,5 +695,22 @@ export default function Sales() {
         {!invoices?.length && <div className="empty-state">Aucune facture pour le moment.</div>}
       </div>
     </div>
-  );
+    );
+  } catch (err) {
+    console.error("Sales render error:", err);
+    return (
+      <div className="page">
+        <div className="page-header">
+          <div>
+            <p className="eyebrow">Commercial</p>
+            <h1 className="page-title">Ventes</h1>
+            <p className="page-description">Une erreur est survenue lors du rendu de la page. Ouvrez la console du navigateur pour plus d'informations.</p>
+          </div>
+        </div>
+        <div className="data-card">
+          <div className="empty-state">Erreur de rendu — consultez la console.</div>
+        </div>
+      </div>
+    );
+  }
 }
