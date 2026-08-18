@@ -48,6 +48,7 @@ export default function Sales() {
   const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
   const [formError, setFormError] = useState("");
   const [showOnlyToday, setShowOnlyToday] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [search, setSearch] = useState("");
 
   const totalAmount = useMemo(
@@ -411,6 +412,7 @@ export default function Sales() {
         customer_id: customerId,
         invoice_date: invoiceDate,
         status,
+        payment_method: paymentMethod || undefined,
         total_amount: invoiceTotal,
       },
       lines: validLines.map((line) => ({
@@ -519,6 +521,26 @@ export default function Sales() {
                   <option value="emise">Emise</option>
                   <option value="payee">Payee</option>
                 </select>
+              </div>
+              <div className="field">
+                <label>Mode de paiement</label>
+                <div className="payment-options">
+                  <label className={`chip ${paymentMethod === 'wave_madame' ? 'active' : ''}`}>
+                    <input type="radio" name="payment" value="wave_madame" checked={paymentMethod === 'wave_madame'} onChange={(e) => setPaymentMethod(e.target.value)} /> Wave Madame
+                  </label>
+                  <label className={`chip ${paymentMethod === 'wave_mr_koffi' ? 'active' : ''}`}>
+                    <input type="radio" name="payment" value="wave_mr_koffi" checked={paymentMethod === 'wave_mr_koffi'} onChange={(e) => setPaymentMethod(e.target.value)} /> Wave Mr Koffi
+                  </label>
+                  <label className={`chip ${paymentMethod === 'orange_money' ? 'active' : ''}`}>
+                    <input type="radio" name="payment" value="orange_money" checked={paymentMethod === 'orange_money'} onChange={(e) => setPaymentMethod(e.target.value)} /> Orange Money
+                  </label>
+                  <label className={`chip ${paymentMethod === 'momo' ? 'active' : ''}`}>
+                    <input type="radio" name="payment" value="momo" checked={paymentMethod === 'momo'} onChange={(e) => setPaymentMethod(e.target.value)} /> MoMo
+                  </label>
+                  <label className={`chip ${paymentMethod === 'moov_money' ? 'active' : ''}`}>
+                    <input type="radio" name="payment" value="moov_money" checked={paymentMethod === 'moov_money'} onChange={(e) => setPaymentMethod(e.target.value)} /> Moov Money
+                  </label>
+                </div>
               </div>
             </div>
 

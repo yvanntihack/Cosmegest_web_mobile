@@ -343,6 +343,11 @@ button {
   color: #172033;
   background: #ffffff;
   text-align: left;
+
+.payment-options { display:flex; gap:8px; flex-wrap:wrap; }
+.payment-options .chip { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:#f3f7fa; border:1px solid #e6edf3; cursor:pointer; }
+.payment-options .chip input { margin-right:6px; }
+.payment-options .chip.active { background:#e6f6f1; border-color:#7dd3b6; }
 }
 
 .topbar-popover button:hover {
