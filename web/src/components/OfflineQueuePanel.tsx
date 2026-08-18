@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getQueue, processQueueOnce, clearQueue } from "../lib/offline";
+import { getQueue, processQueueOnce, clearQueue, retryOperation, getMap, migrateLocalToDB } from "../lib/offline";
 
 function fmtDate(ts: number) {
   try {
@@ -33,6 +33,20 @@ export default function OfflineQueuePanel() {
       refresh();
     } catch (e) {
       console.error("offline: resync error", e);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleMigrate = async () => {
+    setSyncing(true);
+    try {
+      await migrateLocalToDB();
+      await refresh();
+      alert("Migration depuis localStorage effectuee.");
+    } catch (e) {
+      console.error("offline: migrate error", e);
+      alert("Migration a echoue. Voir la console.");
     } finally {
       setSyncing(false);
     }
@@ -79,6 +93,9 @@ export default function OfflineQueuePanel() {
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontWeight: 800 }}>{op.status}</div>
                     {op.error && <div className="table-subtext" style={{ color: "#c2410c" }}>{op.error}</div>}
+                    <div style={{ marginTop: 8 }}>
+                      <button className="secondary-button" onClick={async () => { try { await retryOperation(op.id); await refresh(); } catch (e) { alert('Retry failed'); } }} disabled={syncing || !navigator.onLine}>Retry</button>
+                    </div>
                   </div>
                 </div>
                 <div style={{ marginTop: 8, fontSize: 13, color: "#475569" }}>
@@ -89,6 +106,51 @@ export default function OfflineQueuePanel() {
           </div>
         )}
       </div>
+      <div style={{ marginTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <p className="panel-title">Mappings tempId → realId</p>
+            <p className="panel-copy">Mappings automatiques crees lors de la synchronisation.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="secondary-button" onClick={handleMigrate} disabled={syncing}>Migrer localStorage</button>
+          </div>
+        </div>
+        <MappingList />
+      </div>
     </section>
+  );
+}
+
+function MappingList() {
+  const [map, setMap] = useState<Record<string,string>>({});
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const m = await getMap();
+        if (mounted) setMap(m);
+      } catch (e) {
+        if (mounted) setMap({});
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const entries = Object.entries(map);
+  if (!entries.length) return <div className="empty-state">Aucun mapping present.</div>;
+  return (
+    <div style={{ marginTop: 8 }}>
+      <table className="data-table">
+        <thead>
+          <tr><th>TempId</th><th>RealId</th></tr>
+        </thead>
+        <tbody>
+          {entries.map(([t, r]) => (
+            <tr key={t}><td style={{fontFamily: 'monospace'}}>{t}</td><td style={{fontFamily: 'monospace'}}>{r}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

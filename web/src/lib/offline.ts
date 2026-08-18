@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import db, { type OfflineOp, getAllQueue, addQueueOp, updateQueueOp, getMap as dbGetMap, setMapping as dbSetMapping } from "./db";
+import db, { type OfflineOp, getAllQueue, addQueueOp, updateQueueOp, getMap as dbGetMap, setMapping as dbSetMapping, migrateFromLocalStorage } from "./db";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -126,6 +126,8 @@ export async function processQueueOnce() {
 
 export function initOfflineSync() {
   if (typeof window === "undefined") return;
+  // migrate any legacy localStorage queue into IndexedDB
+  migrateFromLocalStorage().catch((e) => console.debug("offline: migrate skipped/fail", e));
   const trySync = () => {
     if (!navigator.onLine) return;
     processQueueOnce().catch((e) => console.error("offline: sync error", e));
@@ -134,6 +136,31 @@ export function initOfflineSync() {
   setTimeout(trySync, 200);
   window.addEventListener("online", trySync);
   console.debug("offline: initOfflineSync registered");
+}
+
+export async function retryOperation(opId: string) {
+  try {
+    const op = await db.queue.get(opId);
+    if (!op) throw new Error("Op not found");
+    // resolve map
+    const map = await loadMap();
+    op.payload = resolveTempIdsInObject(op.payload, map);
+    op.status = "syncing";
+    await updateQueueOp(op);
+    const res = await processOp(op);
+    if (op.type === "create_customer" && res.result && res.result.id) {
+      await setMapping(op.id, String(res.result.id));
+    }
+    await updateQueueOp(res);
+    return res;
+  } catch (e) {
+    console.error("offline: retry failed", e);
+    throw e;
+  }
+}
+
+export async function migrateLocalToDB() {
+  return migrateFromLocalStorage();
 }
 
 export default {
