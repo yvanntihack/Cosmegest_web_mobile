@@ -18,7 +18,6 @@ export default function Products() {
   const [reference, setReference] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [price, setPrice] = useState("");
-  const [priceType, setPriceType] = useState("detaillant");
   const [wholesalePrice, setWholesalePrice] = useState<string>("");
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -29,7 +28,6 @@ export default function Products() {
     setReference("");
     setCategoryId("");
     setPrice("");
-    setPriceType("detaillant");
     setWholesalePrice("");
     setEditingProductId(null);
     setFormError("");
@@ -67,7 +65,6 @@ export default function Products() {
     setReference(product.reference);
     setCategoryId(product.category_id ?? "");
     setPrice(String(product.selling_price));
-    setPriceType(product.price_type ?? "detaillant");
     setWholesalePrice(product.wholesale_price != null ? String(product.wholesale_price) : "");
     setEditingProductId(product.id);
     setFormError("");
@@ -85,7 +82,6 @@ export default function Products() {
       name: trimmedName,
       reference,
       selling_price: parsedPrice,
-      price_type: priceType,
       wholesale_price: wholesalePrice ? Number(wholesalePrice) : null,
       category_id: categoryId || null,
     };
@@ -161,13 +157,6 @@ export default function Products() {
           <div className="field">
             <label>Prix de vente FCFA</label>
             <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} required />
-          </div>
-          <div className="field">
-            <label>Type de prix</label>
-            <select value={priceType} onChange={(e) => setPriceType(e.target.value)}>
-              <option value="detaillant">Détaillant</option>
-              <option value="grossiste">Grossiste</option>
-            </select>
           </div>
           <div className="field">
             <label>Prix grossiste (optionnel)</label>

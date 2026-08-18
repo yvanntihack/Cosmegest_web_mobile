@@ -73,10 +73,16 @@ export const useUpdateProduct = () => {
         ...updates,
         name: typeof updates?.name === "string" ? updates.name.trim() : updates?.name,
         reference: typeof updates?.reference === "string" ? updates.reference.trim() : updates?.reference,
-        category_id: updates?.category_id || null,
-        price_type: updates?.price_type ?? 'detaillant',
-        wholesale_price: updates?.wholesale_price == null ? null : updates?.wholesale_price,
+        category_id: updates?.category_id ?? null,
       } as Partial<Product>;
+
+      // Only include price fields if explicitly provided to avoid overwriting existing values
+      if (Object.prototype.hasOwnProperty.call(updates, 'price_type')) {
+        (payload as any).price_type = updates.price_type;
+      }
+      if (Object.prototype.hasOwnProperty.call(updates, 'wholesale_price')) {
+        (payload as any).wholesale_price = updates.wholesale_price == null ? null : updates.wholesale_price;
+      }
       const { data, error } = await supabase
         .from("products")
         .update(payload)
