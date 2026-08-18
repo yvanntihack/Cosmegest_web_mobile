@@ -782,7 +782,12 @@ export default function Sales() {
                 <tr key={invoice.id}>
                   <td className="strong-cell">{invoice.invoice_number}</td>
                   <td>{invoice.customers?.name || "N/A"}</td>
-                  <td>{invoice.invoice_date ? new Date(String(invoice.invoice_date)).toLocaleDateString("fr-FR") : ""}</td>
+                  <td>
+                    {(() => {
+                      const dt = invoice.invoice_date ?? invoice.created_at;
+                      return dt ? new Date(String(dt)).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "";
+                    })()}
+                  </td>
                   <td className="strong-cell">{formatCurrency(Number(invoice.total_amount))}</td>
                   <td>
                     <span className={`status-pill status-${invoice.status}`}>{invoice.status}</span>
