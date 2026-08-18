@@ -4,6 +4,7 @@ import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { initOfflineSync } from './lib/offline'
 
 const queryClient = new QueryClient()
 
@@ -42,6 +43,13 @@ if (typeof window !== 'undefined') {
       /* ignore */
     }
   })
+
+  // Initialize offline queue syncing (will no-op in non-browser env)
+  try {
+    initOfflineSync()
+  } catch (e) {
+    console.warn('failed to initialize offline sync', e)
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
