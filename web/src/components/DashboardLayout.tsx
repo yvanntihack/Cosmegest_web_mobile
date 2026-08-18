@@ -165,8 +165,8 @@ export default function DashboardLayout() {
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">
-            <Box size={24} />
-          </div>
+              <img src="/dermo-logo.svg" alt="CosmeGest" style={{ width: 36, height: 36, objectFit: 'contain' }} onError={(e)=>{(e.target as HTMLImageElement).style.display='none'}} />
+            </div>
           <div>
             <h1 className="brand-title">CosmeGest</h1>
             <p className="brand-subtitle">Gestion cosmetique</p>
