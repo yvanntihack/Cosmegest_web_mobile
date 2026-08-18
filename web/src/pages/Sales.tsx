@@ -50,6 +50,7 @@ export default function Sales() {
   const [showOnlyToday, setShowOnlyToday] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
 
   const totalAmount = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0),
@@ -482,6 +483,14 @@ export default function Sales() {
     return map;
   }, [products]);
 
+  const productsForSelect = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    if (!q) return products ?? [];
+    return (products ?? []).filter((p) => {
+      return [p.name, p.reference].join(" ").toLowerCase().includes(q);
+    });
+  }, [products, productSearch]);
+
   try {
   return (
     <div className="page">
@@ -643,9 +652,12 @@ export default function Sales() {
             <div className="invoice-lines">
               <div className="invoice-lines-header">
                 <p className="panel-title">Produits factures</p>
-                <button type="button" className="secondary-button" onClick={() => setLines([...lines, emptyLine()])}>
-                  <Plus size={16} /> Ligne
-                </button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <FilterBar value={productSearch} onChange={setProductSearch} placeholder="Rechercher produit par nom ou réf" />
+                  <button type="button" className="secondary-button" onClick={() => setLines([...lines, emptyLine()])}>
+                    <Plus size={16} /> Ligne
+                  </button>
+                </div>
               </div>
 
               {lines.map((line) => (
@@ -658,7 +670,7 @@ export default function Sales() {
                       required
                     >
                       <option value="">Selectionner</option>
-                      {products?.map((product) => {
+                      {productsForSelect?.map((product) => {
                         const type = productTypes[product.id];
                         return (
                           <option key={product.id} value={product.id}>
