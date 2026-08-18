@@ -1,5 +1,6 @@
 import { Package, ReceiptText, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useDashboardStats } from "../hooks/useDashboard";
 
 const formatCurrency = (amount: number) => `${amount.toFixed(0)} FCFA`;
@@ -353,7 +354,7 @@ export default function Dashboard() {
                       <td className="col-count">{c.count}</td>
                       <td className="col-amount">{formatCurrency(c.amount)}</td>
                       <td className="col-action">
-                        <a className="view-button" href="/customers">Voir</a>
+                        <Link className="view-button" to={`/customers?id=${encodeURIComponent(c.id)}`}>Voir</Link>
                       </td>
                     </tr>
                   ))}
