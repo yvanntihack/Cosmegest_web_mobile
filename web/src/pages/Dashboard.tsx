@@ -1,6 +1,7 @@
 import { Package, ReceiptText, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import OfflineQueuePanel from "../components/OfflineQueuePanel";
 import { useDashboardStats } from "../hooks/useDashboard";
 
 const formatCurrency = (amount: number) => `${amount.toFixed(0)} FCFA`;
@@ -441,6 +442,7 @@ export default function Dashboard() {
             ))}
           </div>
         </section>
+        <OfflineQueuePanel />
       </div>
 
       <section className="data-card insight-section">
