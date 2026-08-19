@@ -7,6 +7,9 @@ import { Pencil, Plus, Trash2, HelpCircle } from "lucide-react";
 import { useMemo } from "react";
 import FilterBar from "../components/FilterBar";
 
+const productTypeLabel = (priceType?: string | null) =>
+  priceType === "grossiste" ? "Grossiste" : "Détaillant";
+
 export default function Products() {
   const { data: products, isLoading } = useProducts();
   const { data: categories } = useCategories();
@@ -18,6 +21,7 @@ export default function Products() {
   const [reference, setReference] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [price, setPrice] = useState("");
+  const [priceType, setPriceType] = useState("detaillant");
   const [wholesalePrice, setWholesalePrice] = useState<string>("");
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -28,6 +32,7 @@ export default function Products() {
     setReference("");
     setCategoryId("");
     setPrice("");
+    setPriceType("detaillant");
     setWholesalePrice("");
     setEditingProductId(null);
     setFormError("");
@@ -65,6 +70,7 @@ export default function Products() {
     setReference(product.reference);
     setCategoryId(product.category_id ?? "");
     setPrice(String(product.selling_price));
+    setPriceType(product.price_type === "grossiste" ? "grossiste" : "detaillant");
     setWholesalePrice(product.wholesale_price != null ? String(product.wholesale_price) : "");
     setEditingProductId(product.id);
     setFormError("");
@@ -82,6 +88,7 @@ export default function Products() {
       name: trimmedName,
       reference,
       selling_price: parsedPrice,
+      price_type: priceType,
       wholesale_price: wholesalePrice ? Number(wholesalePrice) : null,
       category_id: categoryId || null,
     };
@@ -159,6 +166,13 @@ export default function Products() {
             <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} required />
           </div>
           <div className="field">
+            <label>Type de produit</label>
+            <select value={priceType} onChange={(e) => setPriceType(e.target.value)}>
+              <option value="detaillant">Détaillant</option>
+              <option value="grossiste">Grossiste</option>
+            </select>
+          </div>
+          <div className="field">
             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               Prix grossiste (optionnel)
               <span title="Laisser vide si vous n'utilisez pas de prix grossiste. Le type de prix est géré automatiquement.">
@@ -210,7 +224,11 @@ export default function Products() {
                       <td className="strong-cell">{product.name}</td>
                       <td>{product.categories?.name || "N/A"}</td>
                       <td className="strong-cell">{product.selling_price} FCFA</td>
-                      <td><span className="badge badge-muted">{product.price_type ?? 'Standard'}</span></td>
+                      <td>
+                        <span className={`badge ${product.price_type === "grossiste" ? "badge-accent" : "badge-muted"}`}>
+                          {productTypeLabel(product.price_type)}
+                        </span>
+                      </td>
                       <td>
                         <div className="row-actions">
                           <button
@@ -250,7 +268,11 @@ export default function Products() {
                           <td className="strong-cell">{product.name}</td>
                           <td>{product.categories?.name || "N/A"}</td>
                           <td className="strong-cell">{product.selling_price} FCFA</td>
-                          <td><span className={`badge ${type === "Grossiste" ? "badge-accent" : "badge-muted"}`}>{type}</span></td>
+                          <td>
+                            <span className={`badge ${type === "Grossiste" ? "badge-accent" : "badge-muted"}`}>
+                              {productTypeLabel(product.price_type)}
+                            </span>
+                          </td>
                           <td>
                             <div className="row-actions">
                               <button
