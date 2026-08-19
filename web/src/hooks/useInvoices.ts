@@ -23,6 +23,25 @@ export interface UpdateInvoiceInput extends CreateInvoiceInput {
   id: string;
 }
 
+const sanitizeInvoiceHeader = (header: Record<string, unknown>) => {
+  const allowedKeys = [
+    "invoice_number",
+    "customer_id",
+    "invoice_date",
+    "status",
+    "total_amount",
+    "user_id",
+    "created_at",
+  ];
+
+  return Object.fromEntries(
+    Object.entries(header).filter(([key, value]) => {
+      if (value === undefined || value === null) return false;
+      return allowedKeys.includes(key);
+    }),
+  );
+};
+
 export const useInvoices = () => {
   return useQuery({
     queryKey: ["invoices"],
@@ -44,12 +63,12 @@ export const useCreateInvoice = () => {
   return useMutation({
     mutationFn: async (invoiceData: CreateInvoiceInput) => {
       const { invoice_number, ...baseHeader } = invoiceData.header;
-      const header = {
+      const header = sanitizeInvoiceHeader({
         ...baseHeader,
         customer_id: baseHeader.customer_id || null,
         total_amount: Number(baseHeader.total_amount) || 0,
         ...(invoice_number?.trim() ? { invoice_number: invoice_number.trim() } : {}),
-      };
+      });
 
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
@@ -88,12 +107,12 @@ export const useUpdateInvoice = () => {
   return useMutation({
     mutationFn: async (invoiceData: UpdateInvoiceInput) => {
       const { invoice_number, ...baseHeader } = invoiceData.header;
-      const header = {
+      const header = sanitizeInvoiceHeader({
         ...baseHeader,
         customer_id: baseHeader.customer_id || null,
         total_amount: Number(baseHeader.total_amount) || 0,
         ...(invoice_number?.trim() ? { invoice_number: invoice_number.trim() } : {}),
-      };
+      });
 
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
@@ -123,6 +142,21 @@ export const useUpdateInvoice = () => {
 
       if (linesError) throw linesError;
       return invoice;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_stats"] });
+    },
+  });
+};
+
+export const useDeleteInvoice = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });

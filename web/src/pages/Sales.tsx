@@ -4,7 +4,7 @@ import { getQueue, getMap, enqueueOperation } from "../lib/offline";
 import FilterBar from "../components/FilterBar";
 import type { FormEvent } from "react";
 import { useCustomers } from "../hooks/useCustomers";
-import { useCreateInvoice, useInvoices, useUpdateInvoice } from "../hooks/useInvoices";
+import { useCreateInvoice, useDeleteInvoice, useInvoices, useUpdateInvoice } from "../hooks/useInvoices";
 import { useProducts } from "../hooks/useProducts";
 
 interface DraftLine {
@@ -39,6 +39,7 @@ export default function Sales() {
   const { data: products } = useProducts();
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
+  const deleteInvoice = useDeleteInvoice();
 
   const [showForm, setShowForm] = useState(false);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export default function Sales() {
     setCustomerId("");
     setInvoiceDate(today());
     setStatus("emise");
+    setPaymentMethods([]);
     setLines([emptyLine()]);
     setFormError("");
   };
@@ -414,9 +416,6 @@ export default function Sales() {
         customer_id: customerId,
         invoice_date: invoiceDate,
         status,
-        // keep backward-compatible single string and provide array
-        payment_method: paymentMethods.length ? paymentMethods.join(",") : undefined,
-        payment_methods: paymentMethods.length ? paymentMethods : undefined,
         total_amount: invoiceTotal,
       },
       lines: validLines.map((line) => ({
@@ -453,6 +452,18 @@ export default function Sales() {
     } else {
       createInvoice.mutate(payload, options);
     }
+  };
+
+  const handleDeleteInvoice = (invoice: Invoice) => {
+    const message = `Supprimer la facture ${invoice.invoice_number || "#"} pour ${invoice.customers?.name || "le client sélectionné"} ?`;
+    const confirmed = window.confirm(message);
+    if (!confirmed) return;
+
+    deleteInvoice.mutate(invoice.id, {
+      onError: (error: Error) => {
+        setFormError(error.message || "Impossible de supprimer la facture.");
+      },
+    });
   };
 
   // Render loading UI inside main JSX to avoid conditional hook calls
@@ -864,6 +875,16 @@ export default function Sales() {
                         title="Exporter PDF"
                       >
                         <FileText size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteInvoice(invoice)}
+                        className="danger-button"
+                        aria-label="Supprimer la facture"
+                        title="Supprimer"
+                        disabled={deleteInvoice.isPending}
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

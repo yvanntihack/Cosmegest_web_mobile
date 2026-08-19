@@ -3,7 +3,6 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import type { NavLinkRenderProps } from "react-router-dom";
 import {
   Bell,
-  Box,
   FileText,
   LayoutDashboard,
   LogOut,
