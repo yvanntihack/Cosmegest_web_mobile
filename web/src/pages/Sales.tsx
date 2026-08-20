@@ -147,7 +147,7 @@ export default function Sales() {
   };
 
   const exportInvoicePdf = (invoice: Invoice) => {
-    const printableWindow = window.open("", "_blank", "width=430,height=700");
+    const printableWindow = window.open("", "_blank", "width=900,height=700");
     if (!printableWindow) return;
 
     const invoiceLines = (invoice.invoice_lines ?? []) as InvoiceLine[];
@@ -159,11 +159,9 @@ export default function Sales() {
 
         return `
           <tr>
-            <td class="product-cell">
-              <span class="product-name">${escapeHtml(line.products?.name || "Produit")}</span>
-              <span class="unit-price">${formatCurrency(unitPrice)} / unité</span>
-            </td>
+            <td>${escapeHtml(line.products?.name || "Produit")}</td>
             <td class="numeric">${quantity}</td>
+            <td class="numeric">${formatCurrency(unitPrice)}</td>
             <td class="numeric strong">${formatCurrency(totalPrice)}</td>
           </tr>
         `;
@@ -313,56 +311,10 @@ export default function Sales() {
               font-size: 12px;
               text-align: center;
             }
-            /* Format optimisé pour une imprimante thermique 80 mm. */
-            @page { size: 80mm auto; margin: 3mm; }
-            body {
-              padding: 3mm;
-              color: #000;
-              font-family: "Arial Narrow", Arial, sans-serif;
-              font-size: 11px;
-              line-height: 1.3;
-              background: #fff;
-            }
-            .invoice-sheet {
-              width: 74mm;
-              max-width: 74mm;
-              padding: 0;
-              border: 0;
-            }
-            .header {
-              display: block;
-              padding-bottom: 8px;
-              border-bottom: 1px dashed #000;
-              text-align: center;
-            }
-            .brand h1 { color: #000; font-size: 18px; letter-spacing: .04em; }
-            .brand p, .header > div:last-child p { margin: 2px 0; color: #000; font-size: 10px; }
-            .header h2 { margin: 8px 0 1px; color: #000; font-size: 13px; letter-spacing: .08em; }
-            .section { margin-top: 10px; }
-            .section-title { margin: 0 0 4px; color: #000; font-size: 10px; font-weight: 800; }
-            .info-grid { display: block; padding-bottom: 6px; border-bottom: 1px dashed #000; }
-            table { margin-top: 4px; }
-            .info-table th { width: 39%; color: #000; background: transparent; }
-            .info-table td { color: #000; font-weight: 600; }
-            th { padding: 4px 2px; color: #000; background: transparent; border-bottom: 1px dashed #000; font-size: 10px; }
-            td { padding: 5px 2px; border-bottom: 1px dotted #777; font-size: 11px; }
-            .product-cell { width: 54%; }
-            .product-name, .unit-price { display: block; }
-            .product-name { font-weight: 700; }
-            .unit-price { font-size: 9px; }
-            .numeric { white-space: nowrap; }
-            .strong { color: #000; font-weight: 800; }
-            .total { display: block; margin-top: 10px; }
-            .total-box {
-              width: 100%; min-width: 0; padding: 8px 2px; color: #000; background: #fff;
-              border-radius: 0; border-top: 2px solid #000; border-bottom: 2px solid #000; text-align: right;
-            }
-            .total-box span { display: inline; font-size: 11px; opacity: 1; }
-            .total-box strong { display: inline; margin: 0 0 0 8px; font-size: 16px; }
-            .footer { margin-top: 12px; padding-top: 8px; border-top: 1px dashed #000; color: #000; font-size: 10px; }
             @media print {
-              body { width: 74mm; padding: 0; background: #fff; }
-              .invoice-sheet { width: 74mm; max-width: 74mm; margin: 0; }
+              body { padding: 0; background: #ffffff; }
+              .invoice-sheet { border: 0; max-width: none; }
+              @page { margin: 14mm; }
             }
           </style>
         </head>
@@ -423,13 +375,14 @@ export default function Sales() {
               <table>
                 <thead>
                   <tr>
-                    <th>Article</th>
-                    <th class="numeric">Qté</th>
-                    <th class="numeric">Montant</th>
+                    <th>Produit</th>
+                    <th class="numeric">Quantite</th>
+                    <th class="numeric">Prix unitaire</th>
+                    <th class="numeric">Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${rows || '<tr><td colspan="3">Aucune ligne de facture.</td></tr>'}
+                  ${rows || '<tr><td colspan="4">Aucune ligne de facture.</td></tr>'}
                 </tbody>
               </table>
             </section>
