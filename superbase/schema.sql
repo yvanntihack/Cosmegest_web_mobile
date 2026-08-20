@@ -87,6 +87,7 @@ create table invoices (
   customer_id uuid references customers(id) on delete set null,
   invoice_date date not null default current_date,
   status text default 'emise', -- brouillon, emise, payee, annulee
+  payment_methods text[] not null default '{}',
   total_amount numeric(10,2) default 0,
   user_id uuid references auth.users(id) default auth.uid(),
   created_at timestamptz default now()

@@ -25,6 +25,20 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const formatCurrency = (amount: number) => `${amount.toFixed(0)} FCFA`;
 
+const paymentMethodLabels: Record<string, string> = {
+  wave_mr: "Wave Mr",
+  wave_mme: "Wave Mme",
+  om_mme: "OM Mme",
+  om_mr: "OM Mr",
+  momo: "MoMo",
+  cash: "Espèces",
+};
+
+const formatPaymentMethods = (methods?: string[] | null) =>
+  methods?.length
+    ? methods.map((method) => paymentMethodLabels[method] ?? method).join(", ")
+    : "Non renseigné";
+
 const escapeHtml = (value: unknown) =>
   String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -86,6 +100,7 @@ export default function Sales() {
     invoice_date?: string | null;
     created_at?: string | null;
     status?: string | null;
+    payment_methods?: string[] | null;
     total_amount?: number | string | null;
     invoice_lines?: InvoiceLine[];
   };
@@ -96,6 +111,7 @@ export default function Sales() {
     setCustomerId(invoice.customer_id ?? "");
     setInvoiceDate(invoice.invoice_date ?? today());
     setStatus(invoice.status ?? "emise");
+    setPaymentMethods(invoice.payment_methods ?? []);
     setFormError("");
     setLines(
       invoice.invoice_lines?.length
@@ -333,6 +349,10 @@ export default function Sales() {
                       <th>Statut</th>
                       <td>${escapeHtml(invoice.status)}</td>
                     </tr>
+                    <tr>
+                      <th>Mode de paiement</th>
+                      <td>${escapeHtml(formatPaymentMethods(invoice.payment_methods))}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -416,6 +436,7 @@ export default function Sales() {
         customer_id: customerId,
         invoice_date: invoiceDate,
         status,
+        payment_methods: paymentMethods,
         total_amount: invoiceTotal,
       },
       lines: validLines.map((line) => ({

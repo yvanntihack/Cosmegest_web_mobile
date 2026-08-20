@@ -14,6 +14,7 @@ export interface CreateInvoiceInput {
     customer_id: string | null;
     invoice_date: string;
     status: string;
+    payment_methods: string[];
     total_amount: number;
   };
   lines: InvoiceLineInput[];
@@ -29,6 +30,7 @@ const sanitizeInvoiceHeader = (header: Record<string, unknown>) => {
     "customer_id",
     "invoice_date",
     "status",
+    "payment_methods",
     "total_amount",
     "user_id",
     "created_at",
